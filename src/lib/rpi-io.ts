@@ -81,7 +81,7 @@ export class RpiIo extends IoAdapter {
 					'name':		name,
 					'role':		role,
 					'desc':		`GPIO ${String(gpioNum)} INPUT${inverted ? ' inverted' : ''}`,
-					'type':		'boolean',
+					'def':		false,
 					'read':		true,
 					'write':	false,
 				},
@@ -166,7 +166,7 @@ export class RpiIo extends IoAdapter {
 					'name':		output.name,
 					'role':		output.role,
 					'desc':		`GPIO ${String(output.gpioNum)} OUTPUT${output.inverted ? ' inverted' : ''} default ${output.default ? 'ON' : 'OFF'}${output.autoOffSecs > 0 ? ' auto-off '+String(output.autoOffSecs)+' s' : ''}`,
-					'type':		'boolean',
+					'def':		output.default,
 					'read':		true,
 					'write':	true,
 				},
@@ -210,6 +210,7 @@ export class RpiIo extends IoAdapter {
 	 * @param channelId
 	 */
 	private async init_i2c(channelId: string): Promise<void> {
+		this.logf.info('%-15s %-15s', this.constructor.name, 'init_i2c()');
 		this.i2cBus = await I2cBus.open(this.config.I2cBusNb);
 
 		const i2cAddrs = await this.i2cBus.scan();
@@ -264,7 +265,7 @@ export class RpiIo extends IoAdapter {
 					'name':		input.name,
 					'role':		input.role,
 					'desc':		`MCP ${input.mcpPin} INPUT${input.inverted ? ' inverted' : ''}`,
-					'type':		'boolean',
+					'def':		false,
 					'read':		true,
 					'write':	false,
 				},
@@ -319,7 +320,7 @@ export class RpiIo extends IoAdapter {
 					'name':		output.name,
 					'role':		output.role,
 					'desc':		`MCP ${output.mcpPin} OUTPUT${output.inverted ? ' inverted' : ''} default ${output.default ? 'ON' : 'OFF'}${output.autoOffSecs > 0 ? ' auto-off '+String(output.autoOffSecs)+' s' : ''}`,
-					'type':		'boolean',
+					'def':		output.default,
 					'read':		true,
 					'write':	true,
 				},
@@ -387,7 +388,7 @@ export class RpiIo extends IoAdapter {
 		}
 
 		// start
-		await mcp.init();
-		await mcp.readInputs();
+		await mcp.init();				// set pin directions, output values, ...
+		await mcp.readInputs();			// read pin inputs and call registered callbacks
 	}
 }
