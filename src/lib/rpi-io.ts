@@ -107,40 +107,36 @@ export class RpiIo extends IoAdapter {
 			// poll gpio input pin values
 			let   pollTimer: ioBroker.Timeout = null
 			const pollRestart = () => {
-				if (pollTimer) {
+				if (pollSecs > 0) {
 					this.clearTimeout(pollTimer);
+					pollTimer = this.setTimeout(async () => {
+						const pinState = await this.readState(stateId);
+						const pinVal   = readPin();
+						if (pinVal !== pinState?.val) {
+							this.logf.warn('%-15s %-15s %-10s %-50s %s after %d s', this.constructor.name, 'init_gpio()', 'pollTimer', name, (pinVal ? 'ON' : 'OFF'), pollSecs);
+							await this.writeState(stateId, { 'val': pinVal, 'ack': true });
+						}
+						pollTimer = null;
+						pollRestart();
+					}, 1000*pollSecs) ?? null;
 				}
-				pollTimer = this.setTimeout(async () => {
-					const pinState = await this.readState(stateId);
-					const pinVal   = readPin();
-					if (pinVal !== pinState?.val) {
-						this.logf.warn('%-15s %-15s %-10s %-50s %s after %d s', this.constructor.name, 'init_gpio()', 'pollTimer', name, (pinVal ? 'ON' : 'OFF'), pollSecs);
-						await this.writeState(stateId, { 'val': pinVal, 'ack': true });
-					}
-					pollTimer = null;
-					pollRestart();
-				}, 1000*pollSecs) ?? null;
 			};
-			if (pollSecs > 0) {
-				pollRestart();
-			}
 
 			// write (debounced) input pin state
 			const pinHandler = (_pin: number) => {
-				if (pollSecs > 0) {
-					pollRestart();
-				}
 				void this.readState(stateId).then((pinState: ioBroker.State | null) => {
 					const pinVal   = readPin();
 					if (pinVal !== pinState?.val) {
 						void this.writeState(stateId, { val: pinVal, 'ack': true });
 					}
 				});
+				pollRestart();
 			};
 
 			// handle gpio input pin val changes
 			const debounced = (debounceMs > 0) ? debounce(pinHandler, debounceMs) : pinHandler;
 			rpio.poll(gpioNum, debounced, rpio.POLL_BOTH);
+			pollRestart()
 		}
 
 		// debug log input state changes
