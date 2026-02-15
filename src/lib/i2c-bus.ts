@@ -1,6 +1,6 @@
 // '@iobroker/types' (declaring global namespace 'ioBroker') is already imported
 // see "SMBus Compatibility With an I2C Device" (Texas Instruments Application Report SLOA132–April 2009)
-import { IoAdapter }							from './io-adapter';
+import { IoAdapter }							from 'iobroker-utils';
 import { openPromisified, PromisifiedBus }		from 'i2c-bus';
 import { Mutex }								from 'async-mutex';
 import { Buffer }								from 'node:buffer';

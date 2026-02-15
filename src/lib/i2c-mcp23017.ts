@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
-import { IoAdapter }		from './io-adapter';
+import { IoAdapter }		from 'iobroker-utils';
 import { I2cBus }			from './i2c-bus';
 
 // MCP23017: IO7 must be set via I2C interface to "0" (output)
