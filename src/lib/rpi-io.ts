@@ -1,4 +1,3 @@
-import * as utils						from '@iobroker/adapter-core';
 import { IoAdapter }					from 'iobroker-utils';
 import type { StateChange }				from 'iobroker-utils';
 import { I2cBus }						from './i2c-bus';
@@ -17,8 +16,8 @@ export class RpiIo extends IoAdapter {
 	private i2cBus?:			I2cBus;
 	//private gpioPollTimer:		ioBroker.Timeout		= null;
 
-	public constructor(options: Partial<utils.AdapterOptions> = {}) {
-		super({...options, 'name': 'rpi-io' });
+	public constructor(compactOptions?: { logLevel: string; compactInstance: number; compact: true }) {
+		super({ 'name': 'rpi-io', ...compactOptions });
 	}
 
 	/**
