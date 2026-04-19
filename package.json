@@ -27,7 +27,7 @@
     "debounce": "^2.2.0",
     "deep-diff": "^1.0.2",
     "i2c-bus": "^5.2.3",
-    "iobroker-utils": "link:../ioBroker.utils",
+    "iobroker-utils": "file:../ioBroker.utils",
     "rpio": "^2.4.2",
     "sprintf-js": "^1.1.3"
   },
