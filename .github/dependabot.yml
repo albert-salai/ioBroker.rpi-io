@@ -10,8 +10,6 @@ updates:
     assignees:
       - albert-salai
     versioning-strategy: increase
-    ignore:
-      - dependency-name: iobroker-utils
 
   - package-ecosystem: github-actions
     directory: "/"
