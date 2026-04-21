@@ -29,8 +29,11 @@ jobs:
       - uses: ioBroker/testing-action-check@v1
         with:
           node-version: '22.x'
-          # Uncomment the following line if your adapter cannot be installed using 'npm ci'
-          # install-command: 'npm install'
+          install-command: >-
+            git clone --depth=1 https://github.com/albert-salai/ioBroker.utils.git ../ioBroker.utils &&
+            npm --prefix ../ioBroker.utils ci &&
+            npm --prefix ../ioBroker.utils run build &&
+            npm ci
           type-checking: true
           lint: true
 
@@ -49,8 +52,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
-          # Uncomment the following line if your adapter cannot be installed using 'npm ci'
-          # install-command: 'npm install'
+          install-command: >-
+            git clone --depth=1 https://github.com/albert-salai/ioBroker.utils.git ../ioBroker.utils &&
+            npm --prefix ../ioBroker.utils ci &&
+            npm --prefix ../ioBroker.utils run build &&
+            npm ci
           build: true
 
 # TODO: To enable automatic npm releases, create a token on npmjs.org 
