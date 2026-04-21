@@ -166,14 +166,16 @@ export class MCP23017 {
 		let pinChange = 0;
 		try {
 			// ioconb intFlags, gpioVals
-			const [ ioconb, gppua, gppub, intfa, intfb, intcapa, intcapb, gpioa, gpiob ] = await this.i2c.readBlock(this.addr, Register.IOCONB, 9);
+			// Cast to typed tuple so ioconb is IOCON|undefined — avoids no-unsafe-enum-comparison without eslint-disable
+			const bytes = await this.i2c.readBlock(this.addr, Register.IOCONB, 9) as [IOCON?, ...number[]];
+			const [ ioconb, gppua, gppub, intfa, intfb, intcapa, intcapb, gpioa, gpiob ] = bytes;
 			if (ioconb === undefined  ||  gppua === undefined  ||  gppub === undefined  ||  intfa === undefined  ||  intfb === undefined  ||  intcapa === undefined  ||  intcapb === undefined  ||  gpioa === undefined  ||  gpiob === undefined) {
 				//this.logf.error('%-15s %-15s %-10s %-40s', this.constructor.name, 'readInputs()', '', 'i2c.readBlock() failed');
 				return pinChange;
 			}
 
 			// check if mcp is not yet initialized
-			if ((ioconb as IOCON) !== IOCON.MIRROR) {
+			if (ioconb !== IOCON.MIRROR) {
 				this.logf.error('%-15s %-15s %-10s 0b%08b',	this.constructor.name, 'readInputs()', 'ioconb', ioconb);
 				this.logf.error('%-15s %-15s %-10s %-40s',	this.constructor.name, 'readInputs()', '', 're-initializing mcp...');
 				await this.init();
