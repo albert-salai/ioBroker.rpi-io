@@ -40,7 +40,7 @@
     "@types/node": "~22",
     "@types/rpio": "^2.4.6",
     "@types/sprintf-js": "^1.1.4",
-    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.0",
     "eslint": "^10.2.1",
     "rimraf": "^6.1.3",
