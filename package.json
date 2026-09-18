@@ -59,6 +59,9 @@
     "io-package.json",
     "LICENSE"
   ],
+  "bundledDependencies": [
+    "iobroker-utils"
+  ],
   "scripts": {
     "prebuild": "rimraf build",
     "build": "build-adapter ts",
