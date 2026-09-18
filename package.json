@@ -71,7 +71,8 @@
     "test:integration": "echo \"No tests\"",
     "check": "tsc --noEmit",
     "lint": "eslint",
-    "translate": "translate-adapter"
+    "translate": "translate-adapter",
+    "ci": "npm run check && npm run lint && npm run test:package && npm run build && npm run test:integration"
   },
   "bugs": {
     "url": "https://github.com/albert-salai/ioBroker.rpi-io/issues"
