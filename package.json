@@ -67,6 +67,8 @@
     "build:ts": "build-adapter ts",
     "watch:ts": "build-adapter ts --watch",
     "test": "echo \"No tests\"",
+    "test:package": "echo \"No tests\"",
+    "test:integration": "echo \"No tests\"",
     "check": "tsc --noEmit",
     "lint": "eslint",
     "translate": "translate-adapter"
