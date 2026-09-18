@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.4.3",
+    "@iobroker/types": "^7.2.2",
     "async-mutex": "^0.5.0",
     "debounce": "^3.0.0",
     "deep-diff": "^1.0.2",
@@ -34,7 +35,6 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@iobroker/adapter-dev": "^1.5.0",
-    "@iobroker/types": "^7.2.2",
     "@tsconfig/node22": "^22.0.6",
     "@tsconfig/strictest": "^2.0.8",
     "@types/i2c-bus": "^5.1.2",
@@ -60,7 +60,11 @@
     "LICENSE"
   ],
   "bundledDependencies": [
-    "iobroker-utils"
+    "iobroker-utils",
+    "@iobroker/adapter-core",
+    "@iobroker/types",
+    "deep-diff",
+    "sprintf-js"
   ],
   "scripts": {
     "prebuild": "rimraf build",
