@@ -33,9 +33,9 @@ jobs:
         with:
           node-version: '22.x'
           install-command: >-
-            git clone --depth=1 https://github.com/albert-salai/ioBroker.utils.git ../ioBroker.utils &&
-            npm --prefix ../ioBroker.utils ci &&
-            npm --prefix ../ioBroker.utils run build &&
+            git clone --depth=1 https://github.com/albert-salai/ioBroker.utils.git ../iobroker-utils &&
+            npm --prefix ../iobroker-utils ci &&
+            npm --prefix ../iobroker-utils run build &&
             npm ci
           type-checking: true
           lint: true
@@ -56,9 +56,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
           install-command: >-
-            git clone --depth=1 https://github.com/albert-salai/ioBroker.utils.git ../ioBroker.utils &&
-            npm --prefix ../ioBroker.utils ci &&
-            npm --prefix ../ioBroker.utils run build &&
+            git clone --depth=1 https://github.com/albert-salai/ioBroker.utils.git ../iobroker-utils &&
+            npm --prefix ../iobroker-utils ci &&
+            npm --prefix ../iobroker-utils run build &&
             npm ci
           build: true
 
