@@ -62,11 +62,7 @@
     "LICENSE"
   ],
   "bundledDependencies": [
-    "iobroker-utils",
-    "@iobroker/adapter-core",
-    "@iobroker/types",
-    "deep-diff",
-    "sprintf-js"
+    "iobroker-utils"
   ],
   "scripts": {
     "prebuild": "rimraf build",
