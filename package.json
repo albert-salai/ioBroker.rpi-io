@@ -24,11 +24,13 @@
   "dependencies": {
     "@iobroker/adapter-core": "^3.4.3",
     "@iobroker/types": "^7.2.3",
+    "ansi-colors": "^4.1.3",
     "async-mutex": "^0.5.0",
     "debounce": "^3.0.0",
     "deep-diff": "^1.0.2",
     "i2c-bus": "^5.2.3",
     "iobroker-utils": "file:../iobroker-utils",
+    "ml-matrix": "^6.15.0",
     "rpio": "^2.4.2",
     "sprintf-js": "^1.1.3"
   },
@@ -58,6 +60,13 @@
     "www/",
     "io-package.json",
     "LICENSE"
+  ],
+  "bundledDependencies": [
+    "iobroker-utils",
+    "@iobroker/adapter-core",
+    "@iobroker/types",
+    "deep-diff",
+    "sprintf-js"
   ],
   "scripts": {
     "prebuild": "rimraf build",
