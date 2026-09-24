@@ -5,9 +5,10 @@ import { MCP23017 }						from './i2c-mcp23017';
 import   rpio							from 'rpio';		// tried also 'onoff', 'opengpio', 'pigpio', 'pigpio-client' but didn't work
 import   debounce						from 'debounce';
 
-// Note on GPIO pins:		Störungen im Stromnetz führen zu phantom GPIO events
-//		vor allem wenn der Gasbrenner sich ein oder ausschaltet
-//		vor allem bei geschlossenen Sensor-Stromkreisen
+// Note on GPIO pins: power-grid glitches can cause "phantom" GPIO events -- the pin briefly
+// reports a change that didn't really happen. This is worst when the gas burner switches on
+// or off, and worst on sensor circuits that are wired normally-closed. This is why input pins
+// below are debounced and re-checked by a poll timer instead of being trusted on a single read.
 
 // ~~~~~~~~~
 // IoAdapter
@@ -139,7 +140,8 @@ export class RpiIo extends IoAdapter {
 			pollRestart()
 		}
 
-		// debug log input state changes
+		// subscribe with an empty callback so ioBroker still records/logs every
+		// acked state change for these inputs, even though nothing needs to react to it here
 		for (const input of this.config.GpioInput) {
 			const stateId = `${channelId}.${input.state}`;
 			if (stateId !== this.config.McpResetStateId) {
@@ -170,27 +172,35 @@ export class RpiIo extends IoAdapter {
 			});
 
 			// initialize state
+			// a not-yet-acked state means the last commanded value was never confirmed applied
+			// (e.g. instance crashed mid-command), so it cannot be trusted as the pin's truth --
+			// fall back to output.default instead of re-asserting an unconfirmed value
 			const pinState = await this.readState(stateId);
-			const pinVal   = (typeof pinState?.val === 'boolean') ? pinState.val : output.default;
-			if (pinState?.val !== pinVal) {
+			const pinVal   = (typeof pinState?.val === 'boolean'  &&  pinState.ack) ? pinState.val : output.default;
+			if (pinVal !== pinState?.val  ||  pinState?.ack === false) {
 				await this.writeState(stateId, { 'val': pinVal, 'ack': true });
 			}
 
 			// open and init GPIO OUTPUT pin
+			// pinVal (corrected above for a not-yet-acked state) also becomes the physical pin's
+			// initial level, so the NACK fallback to output.default corrects both the ioBroker
+			// state and the physical GPIO pin together
 			rpio.open(output.gpioNum, rpio.OUTPUT, (pinVal !== output.inverted) ? rpio.HIGH : rpio.LOW);
 		}
 
 		// subscribe output state change changes
 		for (const output of this.config.GpioOutput) {
 			const stateId = `${channelId}.${output.state}`;
-			// on output cmd --> write pin --> set output ack
+			// a command (not-yet-acked value) was written to this state from outside (e.g. the UI) --
+			// apply it to the physical pin, then write the state back with ack:true to confirm it happened
 			await this.subscribe({ stateId, 'ack': false, 'cb': async (stateChange: StateChange) => {
 				const pinVal = (stateChange.val === true);
 				rpio.write(output.gpioNum, (pinVal !== output.inverted) ? rpio.HIGH : rpio.LOW);
 				await this.writeState(stateId, { val: pinVal, 'ack': true });
 			}});
 
-			// on output true ack --> wait autoOffSecs --> set ouput false cmd
+			// momentary/pulse output: once the ON command is confirmed (ack:true), start a timer and
+			// command it back OFF after autoOffSecs seconds (e.g. a garage-door trigger or doorbell relay)
 			if (output.autoOffSecs > 0) {
 				await this.subscribe({ stateId, 'val': true, 'ack': true, 'cb': (_stateChange: StateChange) => {
 					this.setTimeout(() => {
@@ -285,7 +295,8 @@ export class RpiIo extends IoAdapter {
 			}});
 		}
 
-		// check mcp input pins every McpPollSecs
+		// safety-net poll: also re-check all mcp input pins on a timer, in case a hardware
+		// interrupt notification is missed (see the phantom-GPIO-event note at the top of this file)
 		if (this.config.McpPollSecs > 0) {
 			this.setInterval(async () => {
 				const pinChange = await mcp.readInputs();
@@ -295,7 +306,8 @@ export class RpiIo extends IoAdapter {
 			}, 1000*this.config.McpPollSecs);
 		}
 
-		// debug log input state changes
+		// subscribe with an empty callback so ioBroker still records/logs every
+		// acked state change for these inputs, even though nothing needs to react to it here
 		for (const input of this.config.McpInput) {
 			const stateId = `${channelId}.${input.state}`;
 			await this.subscribe({ stateId, 'ack': true, 'cb': async (_stateChange: StateChange) => { /* empty */ }});
@@ -324,13 +336,19 @@ export class RpiIo extends IoAdapter {
 			});
 
 			// initialize state
+			// a not-yet-acked state means the last commanded value was never confirmed applied
+			// (e.g. instance crashed mid-command), so it cannot be trusted as the pin's truth --
+			// fall back to output.default instead of re-asserting an unconfirmed value
 			const pinState = await this.readState(stateId);
-			const pinVal = (typeof pinState?.val === 'boolean') ? pinState.val : output.default;
-			if (pinVal !== pinState?.val) {
+			const pinVal = (typeof pinState?.val === 'boolean'  &&  pinState.ack) ? pinState.val : output.default;
+			if (pinVal !== pinState?.val  ||  pinState?.ack === false) {
 				await this.writeState(stateId, { 'val': pinVal, 'ack': true });
 			}
 
 			// open MCP23017 OUTPUT pin
+			// pinVal (corrected above for a not-yet-acked state) also becomes the physical pin's
+			// initial level once mcp.init() writes it to OLATA -- so the NACK fallback to
+			// output.default corrects both the ioBroker state and the physical MCP pin together
 			mcp.register_pin({ 'pinName': output.mcpPin, 'initVal': (pinVal !== output.inverted) });
 		}
 
@@ -338,14 +356,16 @@ export class RpiIo extends IoAdapter {
 		for (const output of this.config.McpOutput) {
 			const stateId = `${channelId}.${output.state}`;
 
-			// on output cmd --> write pin --> set output ack
+			// a command (not-yet-acked value) was written to this state from outside (e.g. the UI) --
+			// apply it to the physical MCP pin, then write the state back with ack:true to confirm it happened
 			await this.subscribe({ stateId, 'ack': false, 'cb': async (stateChange: StateChange) => {
 				const pinVal = (stateChange.val === true);
 				await mcp.setOutput({ 'pinName': output.mcpPin, 'pinVal': (pinVal !== output.inverted) });
 				await this.writeState(stateId, { val: pinVal, 'ack': true });
 			}});
 
-			// on output true ack --> wait autoOffSecs --> set ouput false cmd
+			// momentary/pulse output: once the ON command is confirmed (ack:true), start a timer and
+			// command it back OFF after autoOffSecs seconds (e.g. a garage-door trigger or doorbell relay)
 			if (output.autoOffSecs > 0) {
 				await this.subscribe({ stateId, 'val': true, 'ack': true, 'cb': (_stateChange: StateChange) => {
 					this.setTimeout(() => {
@@ -355,25 +375,33 @@ export class RpiIo extends IoAdapter {
 			}
 		}
 
-		// on McpIntStateId true ack --> mcp.readInputs()
+		// McpIntStateId is a GPIO input wired to the MCP23017's hardware interrupt pin. When that
+		// GPIO goes ON (confirmed), some MCP input pin changed, so go read the MCP's registers now
+		// instead of waiting for the next McpPollSecs poll
 		if (await this.readStateObject(this.config.McpIntStateId)) {
 			await this.subscribe({'stateId': this.config.McpIntStateId, 'val': true, 'ack': true, 'cb': async (_stateChange: StateChange) => {
 				await mcp.readInputs();
 			}});
 		}
 
-		// McpResetStateId
+		// McpResetStateId: an optional virtual "reset" switch a user/automation can flip to ON
+		// to force the MCP23017 to be re-initialized (e.g. after a suspected glitch), without
+		// restarting the whole adapter instance
 		if (await this.readStateObject(this.config.McpResetStateId)) {
-			// initialize to false ack
+			// make sure the switch starts OFF (confirmed) on every adapter start
 			await this.writeState(this.config.McpResetStateId, { 'val': false, 'ack': true });
 
-			// on McpResetState ON ack --> reset mcp --> set McpResetState OFF cmd
+			// this one subscription drives a little 3-step state machine on the switch:
+			//   1. user/automation sets it ON               -> confirmed here as ON (ack:true)
+			//   2. that ON is immediately answered with an OFF command, so it snaps back by itself
+			//   3. once that OFF is confirmed (ack:true), wait 200 ms for the chip to settle,
+			//      then actually re-initialize the MCP23017 and re-read its inputs
 			await this.subscribe({'stateId': this.config.McpResetStateId, 'ack': true, 'cb': async (pinState: StateChange) => {
-				// ON ack --> OFF cmd
+				// step 1 -> 2: ON confirmed, so immediately command it back OFF
 				if (pinState.val) {
 					await this.writeState( this.config.McpResetStateId, { 'val': false, 'ack': false });
 
-				// OFF ack --> wait 200 ms --> init mcp
+				// step 3: OFF confirmed, so the switch has finished its blip -- now do the actual reset
 				} else {
 					this.setTimeout(async () => {
 						await mcp.init();
