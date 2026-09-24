@@ -150,8 +150,11 @@ export class MCP23017 {
 			await this.i2c.writeWord(this.addr, Register.IODIRA,  ~this.outputMask);		// 0 := output
 			await this.i2c.writeWord(this.addr, Register.OLATA,    this.pinStates );
 
-			// first read GPIO (will disable pending INTF interrupt flags), then enable interrupt
-			this.pinStates = await this.i2c.readWord(this.addr, Register.GPIOA);
+			// first read GPIO (will disable pending INTF interrupt flags) but keep pinStates
+			// as registered (last known ioBroker input values, commanded output values), so
+			// that the following readInputs() call can detect and correct any stale input
+			// state that changed physically while the adapter was not running
+			await this.i2c.readWord(this.addr, Register.GPIOA);
 			await this.i2c.writeWord(this.addr, Register.GPINTENA, this.inputMask);
 
 		} catch(e: unknown) {
