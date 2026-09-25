@@ -8,13 +8,16 @@
 - **Platform**: Linux (Raspberry Pi)
 - **Execute as user**: `iobroker` — all commands must use `sudo -u iobroker <command>`
 
-## Shared Library (iobroker-io-lib)
-- Depends on `iobroker-io-lib` via `"iobroker-io-lib": "file:../ioBroker.io-lib"` in package.json
+## Shared Library (iobroker-utils)
+- Depends on `iobroker-utils` via `"iobroker-utils": "file:../iobroker-utils"` in package.json
 - Uses `IoAdapter` from the shared library
-- To modify: edit `../ioBroker.io-lib/src/` and rebuild with `npm run build`
+- To modify: edit `../iobroker-utils/src/` and rebuild with `npm run build`
+- `../iobroker-utils` has its own `postinstall` (builds `dist/` automatically) and declares
+  `typescript` as a real dependency (not devDependency), so `npm install` here also builds
+  the nested `iobroker-utils` correctly
 
 ## Claude Memory
 - **Primary knowledge store**: This `CLAUDE.md` file — all project details and learned patterns should be recorded here, not in `~/.claude/projects/*/memory/`
 
 ---
-*Last updated: 2026-02-17*
+*Last updated: 2026-09-24*
