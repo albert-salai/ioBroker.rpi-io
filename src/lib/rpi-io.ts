@@ -177,7 +177,7 @@ export class RpiIo extends IoAdapter {
 			// fall back to output.default instead of re-asserting an unconfirmed value
 			const pinState = await this.readState(stateId);
 			const pinVal   = (typeof pinState?.val === 'boolean'  &&  pinState.ack) ? pinState.val : output.default;
-			if (pinVal !== pinState?.val  ||  pinState?.ack === false) {
+			if (pinVal !== pinState?.val  ||  !pinState.ack) {
 				await this.writeState(stateId, { 'val': pinVal, 'ack': true });
 			}
 
@@ -341,7 +341,7 @@ export class RpiIo extends IoAdapter {
 			// fall back to output.default instead of re-asserting an unconfirmed value
 			const pinState = await this.readState(stateId);
 			const pinVal = (typeof pinState?.val === 'boolean'  &&  pinState.ack) ? pinState.val : output.default;
-			if (pinVal !== pinState?.val  ||  pinState?.ack === false) {
+			if (pinVal !== pinState?.val  ||  !pinState.ack) {
 				await this.writeState(stateId, { 'val': pinVal, 'ack': true });
 			}
 
