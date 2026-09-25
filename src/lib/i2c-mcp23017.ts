@@ -172,14 +172,24 @@ export class MCP23017 {
 			// Cast to typed tuple so ioconb is IOCON|undefined — avoids no-unsafe-enum-comparison without eslint-disable
 			const bytes = await this.i2c.readBlock(this.addr, Register.IOCONB, 9) as [IOCON?, ...number[]];
 			const [ ioconb, gppua, gppub, intfa, intfb, intcapa, intcapb, gpioa, gpiob ] = bytes;
+			// FIXME: dead code -- I2cBus.readBlock() always resolves a dense 9-element array
+			// (Buffer.alloc(9) + Array.from()), so this can never actually be true; it exists only
+			// to satisfy TS, since number[] doesn't encode a fixed length. Remove this if once
+			// confirmed logf.error() below never fires.
 			if (ioconb === undefined  ||  gppua === undefined  ||  gppub === undefined  ||  intfa === undefined  ||  intfb === undefined  ||  intcapa === undefined  ||  intcapb === undefined  ||  gpioa === undefined  ||  gpiob === undefined) {
-				//this.logf.error('%-15s %-15s %-10s %-40s', this.constructor.name, 'readInputs()', '', 'i2c.readBlock() failed');
+				this.logf.error('%-15s %-15s %-10s %-40s', this.constructor.name, 'readInputs()', '', 'i2c.readBlock() failed');
 				return pinChange;
 			}
 
 			// check if mcp is not yet initialized
 			if (ioconb !== IOCON.MIRROR) {
 				this.logf.error('%-15s %-15s %-10s 0b%08b',	this.constructor.name, 'readInputs()', 'ioconb', ioconb);
+				// rest of the same already-fetched block (no extra I2C traffic), to tell a genuine
+				// chip reset (all-zero POR default across gppua/gppub/intfa/intfb/intcapa/intcapb,
+				// live gpioa/gpiob) apart from a corrupted read (inconsistent/garbage pattern) -- see
+				// FIXME.md
+				this.logf.error('%-15s %-15s %-10s gppua=0b%08b gppub=0b%08b intfa=0b%08b intfb=0b%08b intcapa=0b%08b intcapb=0b%08b gpioa=0b%08b gpiob=0b%08b',
+					this.constructor.name, 'readInputs()', 'block', gppua, gppub, intfa, intfb, intcapa, intcapb, gpioa, gpiob);
 				this.logf.error('%-15s %-15s %-10s %-40s',	this.constructor.name, 'readInputs()', '', 're-initializing mcp...');
 				await this.init();
 				pinChange = await this.readInputs();
