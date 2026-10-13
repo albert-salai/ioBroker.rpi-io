@@ -10,6 +10,26 @@ import   debounce						from 'debounce';
 // or off, and worst on sensor circuits that are wired normally-closed. This is why input pins
 // below are debounced and re-checked by a poll timer instead of being trusted on a single read.
 
+// rpio detects GPIO edges by polling the controller's event register from a hard-coded 1 ms setInterval.
+// The register latches an edge until it is cleared, so a slower poll only delays detection.
+// The handler below re-reads the pin level, so only a pulse shorter than the interval can go unnoticed.
+// Measured CPU of this adapter process on the Pi (8 inputs):
+// 1 ms about 10%, 2 ms about 2.3%, 3 ms about 2%, 4 ms about 2%, 5 ms about 1.7%, 10 ms about 0.9%.
+// Interval (ms) of the timer rpio.poll() creates, replacing rpio's 1 ms:
+const GPIO_EVENT_POLL_MS = 10;
+
+// start rpio's event polling timer (created by the first rpio.poll() call) with GPIO_EVENT_POLL_MS
+function rpioPoll(gpioNum: number, cb: (pin: number) => void): void {
+	const origSetInterval = globalThis.setInterval;
+	globalThis.setInterval = ((handler: () => void) =>
+		origSetInterval(handler, GPIO_EVENT_POLL_MS)) as typeof setInterval;
+	try {
+		rpio.poll(gpioNum, cb, rpio.POLL_BOTH);
+	} finally {
+		globalThis.setInterval = origSetInterval;
+	}
+}
+
 // ~~~~~~~~~
 // IoAdapter
 // ~~~~~~~~~
@@ -149,7 +169,7 @@ export class RpiIo extends IoAdapter {
 
 			// handle gpio input pin val changes
 			const debounced = (debounceMs > 0) ? debounce(pinHandler, debounceMs) : pinHandler;
-			rpio.poll(gpioNum, debounced, rpio.POLL_BOTH);
+			rpioPoll(gpioNum, debounced);
 			this.polledGpios.push(gpioNum);
 			pollRestart()
 		}
