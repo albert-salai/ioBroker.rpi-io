@@ -15,6 +15,7 @@ import   debounce						from 'debounce';
 // ~~~~~~~~~
 export class RpiIo extends IoAdapter {
 	private i2cBus?:			I2cBus;
+	private polledGpios:		number[]				= [];
 	//private gpioPollTimer:		ioBroker.Timeout		= null;
 
 	public constructor(compactOptions?: { logLevel: string; compactInstance: number; compact: true }) {
@@ -50,6 +51,18 @@ export class RpiIo extends IoAdapter {
 	 * @param callback
 	 */
 	protected override async onUnload(): Promise<void> {
+		// switch off edge detection first (synchronous): rpio sets the pins' GPREN/GPFEN bits in hardware,
+		// and bits left set after the process ends keep latching events nobody clears; with kernel GPIO
+		// interrupts active (no dtoverlay=gpio-no-irq) such an event can lock up CPU0 in an interrupt storm
+		for (const gpioNum of this.polledGpios) {
+			try {
+				rpio.poll(gpioNum, null);
+			} catch (e: unknown) {
+				this.log.error((e instanceof Error) ? (e.stack ?? String(e)) : String(e));
+			}
+		}
+		this.polledGpios = [];
+
 		await this.i2cBus?.close();
 
 		await super.onUnload();
@@ -137,6 +150,7 @@ export class RpiIo extends IoAdapter {
 			// handle gpio input pin val changes
 			const debounced = (debounceMs > 0) ? debounce(pinHandler, debounceMs) : pinHandler;
 			rpio.poll(gpioNum, debounced, rpio.POLL_BOTH);
+			this.polledGpios.push(gpioNum);
 			pollRestart()
 		}
 
