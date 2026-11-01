@@ -30,7 +30,7 @@
     "deep-diff": "^1.0.2",
     "i2c-bus": "^5.2.3",
     "iobroker-utils": "file:../iobroker-utils",
-    "ml-matrix": "^6.15.0",
+    "ml-matrix": "^6.15.1",
     "rpio": "^2.4.2",
     "sprintf-js": "^1.1.3"
   },
