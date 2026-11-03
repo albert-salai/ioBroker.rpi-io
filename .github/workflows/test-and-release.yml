@@ -61,6 +61,7 @@ jobs:
             npm --prefix ../iobroker-utils run build &&
             npm ci
           build: true
+          integration-test-command: 'echo \"Integration test not usable: bundled iobroker-utils, unpublished adapter\"'
 
 # TODO: To enable automatic npm releases, create a token on npmjs.org 
 # Enter this token as a GitHub secret (with name NPM_TOKEN) in the repository options
