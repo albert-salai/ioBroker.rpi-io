@@ -87,8 +87,7 @@
         "uk": "RPI IO",
         "zh-cn": "转速输入输出"
       },
-      "link": "",
-      "fa-icon": "info"
+      "link": ""
     },
     "dependencies": [
       {
@@ -99,8 +98,7 @@
       {
         "admin": ">=7.0.23"
       }
-    ],
-    "installedFrom": "file:my_modules/ioBroker.rpi-io"
+    ]
   },
   "native": {},
   "objects": [],
