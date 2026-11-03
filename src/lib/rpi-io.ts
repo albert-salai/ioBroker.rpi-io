@@ -1,9 +1,9 @@
-import { IoAdapter }					from 'iobroker-utils';
-import type { StateChange }				from 'iobroker-utils';
-import { I2cBus }						from './i2c-bus';
-import { MCP23017 }						from './i2c-mcp23017';
-import   rpio							from 'rpio';		// tried also 'onoff', 'opengpio', 'pigpio', 'pigpio-client' but didn't work
-import   debounce						from 'debounce';
+import { IoAdapter } from 'iobroker-utils';
+import type { StateChange } from 'iobroker-utils';
+import { I2cBus } from './i2c-bus';
+import { MCP23017 } from './i2c-mcp23017';
+import rpio from 'rpio'; // tried also 'onoff', 'opengpio', 'pigpio', 'pigpio-client' but didn't work
+import debounce from 'debounce';
 
 // Note on GPIO pins: power-grid glitches can cause "phantom" GPIO events -- the pin briefly
 // reports a change that didn't really happen. This is worst when the gas burner switches on
@@ -21,8 +21,7 @@ const GPIO_EVENT_POLL_MS = 10;
 // start rpio's event polling timer (created by the first rpio.poll() call) with GPIO_EVENT_POLL_MS
 function rpioPoll(gpioNum: number, cb: (pin: number) => void): void {
 	const origSetInterval = globalThis.setInterval;
-	globalThis.setInterval = ((handler: () => void) =>
-		origSetInterval(handler, GPIO_EVENT_POLL_MS)) as typeof setInterval;
+	globalThis.setInterval = (handler: () => void) => origSetInterval(handler, GPIO_EVENT_POLL_MS);
 	try {
 		rpio.poll(gpioNum, cb, rpio.POLL_BOTH);
 	} finally {
@@ -34,17 +33,14 @@ function rpioPoll(gpioNum: number, cb: (pin: number) => void): void {
 // IoAdapter
 // ~~~~~~~~~
 export class RpiIo extends IoAdapter {
-	private i2cBus?:			I2cBus;
-	private polledGpios:		number[]				= [];
+	private i2cBus?: I2cBus;
+	private polledGpios: number[] = [];
 	//private gpioPollTimer:		ioBroker.Timeout		= null;
 
 	public constructor(compactOptions?: { logLevel: string; compactInstance: number; compact: true }) {
-		super({ 'name': 'rpi-io', ...compactOptions });
+		super({ name: 'rpi-io', ...compactOptions });
 	}
 
-	/**
-	 *
-	 */
 	protected override async onReady(): Promise<void> {
 		try {
 			await this.setState('info.connection', false, true);
@@ -52,16 +48,15 @@ export class RpiIo extends IoAdapter {
 			//this.logf.debug('%-15s %-15s %-40s\n%s', this.constructor.name, 'onReady()', 'config', JSON.stringify(this.config, null, 4));
 
 			const channelId = `${this.namespace}.pin`;
-			await this.writeChannelObj(channelId, { 'name': 'Pin' });
+			await this.writeChannelObj(channelId, { name: 'Pin' });
 			await this.init_gpio(channelId);
 			await this.init_i2c(channelId);
 
 			// ready
 			await this.setState('info.connection', true, true);
 			this.logf.debug('%-15s %-15s %-40s', this.constructor.name, 'onReady()', 'done');
-
 		} catch (e: unknown) {
-			this.log.error((e instanceof Error) ? (e.stack ?? String(e)) : String(e));
+			this.log.error(e instanceof Error ? (e.stack ?? String(e)) : String(e));
 			await this.setState('info.connection', false, true);
 		}
 	}
@@ -78,7 +73,7 @@ export class RpiIo extends IoAdapter {
 			try {
 				rpio.poll(gpioNum, null);
 			} catch (e: unknown) {
-				this.log.error((e instanceof Error) ? (e.stack ?? String(e)) : String(e));
+				this.log.error(e instanceof Error ? (e.stack ?? String(e)) : String(e));
 			}
 		}
 		this.polledGpios = [];
@@ -96,7 +91,7 @@ export class RpiIo extends IoAdapter {
 		this.logf.info('%-15s %-15s', this.constructor.name, 'init_gpio()');
 
 		// Use the GPIOxx numbering
-		rpio.init({ 'mapping': 'gpio' });
+		rpio.init({ mapping: 'gpio' });
 
 		// ~~~~~~~~~
 		// GpioInput
@@ -107,19 +102,27 @@ export class RpiIo extends IoAdapter {
 		for (const input of this.config.GpioInput) {
 			const { gpioNum, state: ownState, name, role, inverted, pollSecs, history } = input;
 			const stateId = `${channelId}.${ownState}`;
-			this.logf.debug('%-15s %-15s %-10s %-50s %-25s %s', this.constructor.name, 'init_gpio()', 'input', stateId, name, role);
+			this.logf.debug(
+				'%-15s %-15s %-10s %-50s %-25s %s',
+				this.constructor.name,
+				'init_gpio()',
+				'input',
+				stateId,
+				name,
+				role,
+			);
 
 			// create/update state object
 			await this.writeStateObj(stateId, {
-				'common': {
-					'name':		name,
-					'role':		role,
-					'desc':		`GPIO ${String(gpioNum)} INPUT${inverted ? ' inverted' : ''}`,
-					'def':		false,
-					'read':		true,
-					'write':	false,
+				common: {
+					name: name,
+					role: role,
+					desc: `GPIO ${String(gpioNum)} INPUT${inverted ? ' inverted' : ''}`,
+					def: false,
+					read: true,
+					write: false,
 				},
-				'history':		{ 'enabled': history }
+				history: { enabled: history },
 			});
 
 			// open GPIO INPUT pin
@@ -127,51 +130,60 @@ export class RpiIo extends IoAdapter {
 
 			// readPin()
 			const readPin = (): boolean => {
-				const  phy   = (rpio.read(gpioNum) === rpio.HIGH);
+				const phy = rpio.read(gpioNum) === rpio.HIGH;
 				return phy !== inverted;
 			};
 
 			// initialize state
 			const pinState = await this.readState(stateId);
-			const pinVal   = readPin();
+			const pinVal = readPin();
 			if (pinVal !== pinState?.val) {
-				await this.writeState(stateId, { 'val': pinVal, 'ack': true });
+				await this.writeState(stateId, { val: pinVal, ack: true });
 			}
 
 			// poll gpio input pin values
-			let   pollTimer: ioBroker.Timeout = null
-			const pollRestart = () => {
+			let pollTimer: ioBroker.Timeout = null;
+			const pollRestart = (): void => {
 				if (pollSecs > 0) {
 					this.clearTimeout(pollTimer);
-					pollTimer = this.setTimeout(async () => {
-						const pinState = await this.readState(stateId);
-						const pinVal   = readPin();
-						if (pinVal !== pinState?.val) {
-							this.logf.warn('%-15s %-15s %-10s %-50s %s after %d s', this.constructor.name, 'init_gpio()', 'pollTimer', name, (pinVal ? 'ON' : 'OFF'), pollSecs);
-							await this.writeState(stateId, { 'val': pinVal, 'ack': true });
-						}
-						pollTimer = null;
-						pollRestart();
-					}, 1000*pollSecs) ?? null;
+					pollTimer =
+						this.setTimeout(async () => {
+							const pinState = await this.readState(stateId);
+							const pinVal = readPin();
+							if (pinVal !== pinState?.val) {
+								this.logf.warn(
+									'%-15s %-15s %-10s %-50s %s after %d s',
+									this.constructor.name,
+									'init_gpio()',
+									'pollTimer',
+									name,
+									pinVal ? 'ON' : 'OFF',
+									pollSecs,
+								);
+								await this.writeState(stateId, { val: pinVal, ack: true });
+							}
+							pollTimer = null;
+							pollRestart();
+						}, 1000 * pollSecs) ?? null;
 				}
 			};
 
 			// write (debounced) input pin state
-			const pinHandler = (_pin: number) => {
+			const pinHandler = (_pin: number): void => {
 				void this.readState(stateId).then((pinState: ioBroker.State | null) => {
-					const pinVal   = readPin();
+					const pinVal = readPin();
 					if (pinVal !== pinState?.val) {
-						void this.writeState(stateId, { val: pinVal, 'ack': true });
+						void this.writeState(stateId, { val: pinVal, ack: true });
 					}
 				});
 				pollRestart();
 			};
 
 			// handle gpio input pin val changes
-			const debounced = (debounceMs > 0) ? debounce(pinHandler, debounceMs) : pinHandler;
+			const debounced = debounceMs > 0 ? debounce(pinHandler, debounceMs) : pinHandler;
 			rpioPoll(gpioNum, debounced);
 			this.polledGpios.push(gpioNum);
-			pollRestart()
+			pollRestart();
 		}
 
 		// subscribe with an empty callback so ioBroker still records/logs every
@@ -179,7 +191,13 @@ export class RpiIo extends IoAdapter {
 		for (const input of this.config.GpioInput) {
 			const stateId = `${channelId}.${input.state}`;
 			if (stateId !== this.config.McpResetStateId) {
-				await this.subscribe({ stateId, 'ack': true, 'cb': async (_stateChange: StateChange) => { /* empty */ } });
+				await this.subscribe({
+					stateId,
+					ack: true,
+					cb: async (_stateChange: StateChange) => {
+						/* empty */
+					},
+				});
 			}
 		}
 
@@ -190,19 +208,27 @@ export class RpiIo extends IoAdapter {
 		// init gpio output pin
 		for (const output of this.config.GpioOutput) {
 			const stateId = `${channelId}.${output.state}`;
-			this.logf.debug('%-15s %-15s %-10s %-50s %-25s %s', this.constructor.name, 'init_gpio()', 'output', stateId, output.name, output.role);
+			this.logf.debug(
+				'%-15s %-15s %-10s %-50s %-25s %s',
+				this.constructor.name,
+				'init_gpio()',
+				'output',
+				stateId,
+				output.name,
+				output.role,
+			);
 
 			// create/update state object
 			await this.writeStateObj(stateId, {
-				'common': {
-					'name':		output.name,
-					'role':		output.role,
-					'desc':		`GPIO ${String(output.gpioNum)} OUTPUT${output.inverted ? ' inverted' : ''} default ${output.default ? 'ON' : 'OFF'}${output.autoOffSecs > 0 ? ' auto-off '+String(output.autoOffSecs)+' s' : ''}`,
-					'def':		output.default,
-					'read':		true,
-					'write':	true,
+				common: {
+					name: output.name,
+					role: output.role,
+					desc: `GPIO ${String(output.gpioNum)} OUTPUT${output.inverted ? ' inverted' : ''} default ${output.default ? 'ON' : 'OFF'}${output.autoOffSecs > 0 ? ` auto-off ${String(output.autoOffSecs)} s` : ''}`,
+					def: output.default,
+					read: true,
+					write: true,
 				},
-				'history':		{ 'enabled': output.history }
+				history: { enabled: output.history },
 			});
 
 			// initialize state
@@ -210,16 +236,16 @@ export class RpiIo extends IoAdapter {
 			// (e.g. instance crashed mid-command), so it cannot be trusted as the pin's truth --
 			// fall back to output.default instead of re-asserting an unconfirmed value
 			const pinState = await this.readState(stateId);
-			const pinVal   = (typeof pinState?.val === 'boolean'  &&  pinState.ack) ? pinState.val : output.default;
-			if (pinVal !== pinState?.val  ||  !pinState.ack) {
-				await this.writeState(stateId, { 'val': pinVal, 'ack': true });
+			const pinVal = typeof pinState?.val === 'boolean' && pinState.ack ? pinState.val : output.default;
+			if (pinVal !== pinState?.val || !pinState.ack) {
+				await this.writeState(stateId, { val: pinVal, ack: true });
 			}
 
 			// open and init GPIO OUTPUT pin
 			// pinVal (corrected above for a not-yet-acked state) also becomes the physical pin's
 			// initial level, so the NACK fallback to output.default corrects both the ioBroker
 			// state and the physical GPIO pin together
-			rpio.open(output.gpioNum, rpio.OUTPUT, (pinVal !== output.inverted) ? rpio.HIGH : rpio.LOW);
+			rpio.open(output.gpioNum, rpio.OUTPUT, pinVal !== output.inverted ? rpio.HIGH : rpio.LOW);
 		}
 
 		// subscribe output state change changes
@@ -227,20 +253,29 @@ export class RpiIo extends IoAdapter {
 			const stateId = `${channelId}.${output.state}`;
 			// a command (not-yet-acked value) was written to this state from outside (e.g. the UI) --
 			// apply it to the physical pin, then write the state back with ack:true to confirm it happened
-			await this.subscribe({ stateId, 'ack': false, 'cb': async (stateChange: StateChange) => {
-				const pinVal = (stateChange.val === true);
-				rpio.write(output.gpioNum, (pinVal !== output.inverted) ? rpio.HIGH : rpio.LOW);
-				await this.writeState(stateId, { val: pinVal, 'ack': true });
-			}});
+			await this.subscribe({
+				stateId,
+				ack: false,
+				cb: async (stateChange: StateChange) => {
+					const pinVal = stateChange.val === true;
+					rpio.write(output.gpioNum, pinVal !== output.inverted ? rpio.HIGH : rpio.LOW);
+					await this.writeState(stateId, { val: pinVal, ack: true });
+				},
+			});
 
 			// momentary/pulse output: once the ON command is confirmed (ack:true), start a timer and
 			// command it back OFF after autoOffSecs seconds (e.g. a garage-door trigger or doorbell relay)
 			if (output.autoOffSecs > 0) {
-				await this.subscribe({ stateId, 'val': true, 'ack': true, 'cb': (_stateChange: StateChange) => {
-					this.setTimeout(() => {
-						void this.writeState(stateId, { 'val': false, 'ack': false });
-					}, 1000*output.autoOffSecs);
-				}});
+				await this.subscribe({
+					stateId,
+					val: true,
+					ack: true,
+					cb: (_stateChange: StateChange) => {
+						this.setTimeout(() => {
+							void this.writeState(stateId, { val: false, ack: false });
+						}, 1000 * output.autoOffSecs);
+					},
+				});
 			}
 		}
 	}
@@ -254,23 +289,46 @@ export class RpiIo extends IoAdapter {
 		this.i2cBus = await I2cBus.open(this.config.I2cBusNb);
 
 		const i2cAddrs = await this.i2cBus.scan();
-		this.logf.debug('%-15s %-15s %-10s %-50s', this.constructor.name, 'init_i2c()', 'devices', JSON.stringify(i2cAddrs.map(addr => `0x${addr.toString(16)}`)));
+		this.logf.debug(
+			'%-15s %-15s %-10s %-50s',
+			this.constructor.name,
+			'init_i2c()',
+			'devices',
+			JSON.stringify(i2cAddrs.map(addr => `0x${addr.toString(16)}`)),
+		);
 
 		for (const i2cAddr of i2cAddrs) {
 			// found MCP23017
 			if (i2cAddr === 0x20) {
 				await this.init_mcp23017(channelId, this.i2cBus, i2cAddr);
 
-			// found MCP2324
+				// found MCP2324
 			} else if (i2cAddr === 0x68) {
-				this.logf.debug('%-15s %-15s %-10s MCP2324 0x%02X not implemented',		this.constructor.name, 'init_i2c()', '', i2cAddr);
+				this.logf.debug(
+					'%-15s %-15s %-10s MCP2324 0x%02X not implemented',
+					this.constructor.name,
+					'init_i2c()',
+					'',
+					i2cAddr,
+				);
 
-			// found DS2482
+				// found DS2482
 			} else if (i2cAddr === 0x18) {
-				this.logf.debug('%-15s %-15s %-10s DS2482 0x%02X not implemented',		this.constructor.name, 'init_i2c()', '', i2cAddr);
-
+				this.logf.debug(
+					'%-15s %-15s %-10s DS2482 0x%02X not implemented',
+					this.constructor.name,
+					'init_i2c()',
+					'',
+					i2cAddr,
+				);
 			} else {
-				this.logf.debug('%-15s %-15s %-10s I2C device 0x%02X not implemented',	this.constructor.name, 'init_i2c()', 'error', i2cAddr);
+				this.logf.debug(
+					'%-15s %-15s %-10s I2C device 0x%02X not implemented',
+					this.constructor.name,
+					'init_i2c()',
+					'error',
+					i2cAddr,
+				);
 			}
 		}
 	}
@@ -286,8 +344,8 @@ export class RpiIo extends IoAdapter {
 
 		// create mcp IoDevice
 		const mcp = new MCP23017({
-			'i2cBus':		i2cBus,
-			'i2cAddr':		i2cAddr,
+			i2cBus: i2cBus,
+			i2cAddr: i2cAddr,
 		});
 
 		// ~~~~~~~~
@@ -297,36 +355,48 @@ export class RpiIo extends IoAdapter {
 		// init mcp input pin
 		for (const input of this.config.McpInput) {
 			const stateId = `${channelId}.${input.state}`;
-			this.logf.debug('%-15s %-15s %-10s %-50s %-25s %s', this.constructor.name, 'init_mcp23017()', 'input', stateId, input.name, input.role);
+			this.logf.debug(
+				'%-15s %-15s %-10s %-50s %-25s %s',
+				this.constructor.name,
+				'init_mcp23017()',
+				'input',
+				stateId,
+				input.name,
+				input.role,
+			);
 
 			// create/update state object
 			await this.writeStateObj(stateId, {
-				'common': {
-					'name':		input.name,
-					'role':		input.role,
-					'desc':		`MCP ${input.mcpPin} INPUT${input.inverted ? ' inverted' : ''}`,
-					'def':		false,
-					'read':		true,
-					'write':	false,
+				common: {
+					name: input.name,
+					role: input.role,
+					desc: `MCP ${input.mcpPin} INPUT${input.inverted ? ' inverted' : ''}`,
+					def: false,
+					read: true,
+					write: false,
 				},
-				'history':		{ 'enabled': input.history }
+				history: { enabled: input.history },
 			});
 
 			// initialize state
 			const pinState = await this.readState(stateId);
-			const pinVal   = (typeof pinState?.val === 'boolean') ? pinState.val : false;
+			const pinVal = typeof pinState?.val === 'boolean' ? pinState.val : false;
 			if (pinVal !== pinState?.val) {
-				await this.writeState(stateId, { 'val': pinVal, 'ack': true });
+				await this.writeState(stateId, { val: pinVal, ack: true });
 			}
 
 			// open MCP23017 INPUT pin
-			mcp.register_pin({ 'pinName': input.mcpPin, 'initVal': pinVal, 'onChange': async (phy: boolean) => {
-				const pinState = await this.readState(stateId);
-				const pinVal = (phy !== input.inverted);
-				if (pinVal !== pinState?.val) {
-					await this.writeState(stateId, { val: pinVal, 'ack': true });		// set val ack
-				}
-			}});
+			mcp.register_pin({
+				pinName: input.mcpPin,
+				initVal: pinVal,
+				onChange: async (phy: boolean) => {
+					const pinState = await this.readState(stateId);
+					const pinVal = phy !== input.inverted;
+					if (pinVal !== pinState?.val) {
+						await this.writeState(stateId, { val: pinVal, ack: true }); // set val ack
+					}
+				},
+			});
 		}
 
 		// safety-net poll: also re-check all mcp input pins on a timer, in case a hardware
@@ -335,16 +405,29 @@ export class RpiIo extends IoAdapter {
 			this.setInterval(async () => {
 				const pinChange = await mcp.readInputs();
 				if (pinChange) {
-					this.logf.warn('%-15s %-15s %-10s %-50s 0b%016b', this.constructor.name, 'setInterval()', 'mismatch', 'pinChange', pinChange);
+					this.logf.warn(
+						'%-15s %-15s %-10s %-50s 0b%016b',
+						this.constructor.name,
+						'setInterval()',
+						'mismatch',
+						'pinChange',
+						pinChange,
+					);
 				}
-			}, 1000*this.config.McpPollSecs);
+			}, 1000 * this.config.McpPollSecs);
 		}
 
 		// subscribe with an empty callback so ioBroker still records/logs every
 		// acked state change for these inputs, even though nothing needs to react to it here
 		for (const input of this.config.McpInput) {
 			const stateId = `${channelId}.${input.state}`;
-			await this.subscribe({ stateId, 'ack': true, 'cb': async (_stateChange: StateChange) => { /* empty */ }});
+			await this.subscribe({
+				stateId,
+				ack: true,
+				cb: async (_stateChange: StateChange) => {
+					/* empty */
+				},
+			});
 		}
 
 		// ~~~~~~~~~
@@ -354,19 +437,27 @@ export class RpiIo extends IoAdapter {
 		// init mcp output pin
 		for (const output of this.config.McpOutput) {
 			const stateId = `${channelId}.${output.state}`;
-			this.logf.debug('%-15s %-15s %-10s %-50s %-25s %s', this.constructor.name, 'init_mcp23017()', 'output', stateId, output.name, output.role);
+			this.logf.debug(
+				'%-15s %-15s %-10s %-50s %-25s %s',
+				this.constructor.name,
+				'init_mcp23017()',
+				'output',
+				stateId,
+				output.name,
+				output.role,
+			);
 
 			// create/update state object
 			await this.writeStateObj(stateId, {
-				'common': {
-					'name':		output.name,
-					'role':		output.role,
-					'desc':		`MCP ${output.mcpPin} OUTPUT${output.inverted ? ' inverted' : ''} default ${output.default ? 'ON' : 'OFF'}${output.autoOffSecs > 0 ? ' auto-off '+String(output.autoOffSecs)+' s' : ''}`,
-					'def':		output.default,
-					'read':		true,
-					'write':	true,
+				common: {
+					name: output.name,
+					role: output.role,
+					desc: `MCP ${output.mcpPin} OUTPUT${output.inverted ? ' inverted' : ''} default ${output.default ? 'ON' : 'OFF'}${output.autoOffSecs > 0 ? ` auto-off ${String(output.autoOffSecs)} s` : ''}`,
+					def: output.default,
+					read: true,
+					write: true,
 				},
-				'history':		{ 'enabled': output.history }
+				history: { enabled: output.history },
 			});
 
 			// initialize state
@@ -374,16 +465,16 @@ export class RpiIo extends IoAdapter {
 			// (e.g. instance crashed mid-command), so it cannot be trusted as the pin's truth --
 			// fall back to output.default instead of re-asserting an unconfirmed value
 			const pinState = await this.readState(stateId);
-			const pinVal = (typeof pinState?.val === 'boolean'  &&  pinState.ack) ? pinState.val : output.default;
-			if (pinVal !== pinState?.val  ||  !pinState.ack) {
-				await this.writeState(stateId, { 'val': pinVal, 'ack': true });
+			const pinVal = typeof pinState?.val === 'boolean' && pinState.ack ? pinState.val : output.default;
+			if (pinVal !== pinState?.val || !pinState.ack) {
+				await this.writeState(stateId, { val: pinVal, ack: true });
 			}
 
 			// open MCP23017 OUTPUT pin
 			// pinVal (corrected above for a not-yet-acked state) also becomes the physical pin's
 			// initial level once mcp.init() writes it to OLATA -- so the NACK fallback to
 			// output.default corrects both the ioBroker state and the physical MCP pin together
-			mcp.register_pin({ 'pinName': output.mcpPin, 'initVal': (pinVal !== output.inverted) });
+			mcp.register_pin({ pinName: output.mcpPin, initVal: pinVal !== output.inverted });
 		}
 
 		// subscribe output state change changes
@@ -392,20 +483,29 @@ export class RpiIo extends IoAdapter {
 
 			// a command (not-yet-acked value) was written to this state from outside (e.g. the UI) --
 			// apply it to the physical MCP pin, then write the state back with ack:true to confirm it happened
-			await this.subscribe({ stateId, 'ack': false, 'cb': async (stateChange: StateChange) => {
-				const pinVal = (stateChange.val === true);
-				await mcp.setOutput({ 'pinName': output.mcpPin, 'pinVal': (pinVal !== output.inverted) });
-				await this.writeState(stateId, { val: pinVal, 'ack': true });
-			}});
+			await this.subscribe({
+				stateId,
+				ack: false,
+				cb: async (stateChange: StateChange) => {
+					const pinVal = stateChange.val === true;
+					await mcp.setOutput({ pinName: output.mcpPin, pinVal: pinVal !== output.inverted });
+					await this.writeState(stateId, { val: pinVal, ack: true });
+				},
+			});
 
 			// momentary/pulse output: once the ON command is confirmed (ack:true), start a timer and
 			// command it back OFF after autoOffSecs seconds (e.g. a garage-door trigger or doorbell relay)
 			if (output.autoOffSecs > 0) {
-				await this.subscribe({ stateId, 'val': true, 'ack': true, 'cb': (_stateChange: StateChange) => {
-					this.setTimeout(() => {
-						void this.writeState(stateId, { 'val': false, 'ack': false });
-					}, 1000*output.autoOffSecs);
-				}});
+				await this.subscribe({
+					stateId,
+					val: true,
+					ack: true,
+					cb: (_stateChange: StateChange) => {
+						this.setTimeout(() => {
+							void this.writeState(stateId, { val: false, ack: false });
+						}, 1000 * output.autoOffSecs);
+					},
+				});
 			}
 		}
 
@@ -413,9 +513,14 @@ export class RpiIo extends IoAdapter {
 		// GPIO goes ON (confirmed), some MCP input pin changed, so go read the MCP's registers now
 		// instead of waiting for the next McpPollSecs poll
 		if (await this.readStateObject(this.config.McpIntStateId)) {
-			await this.subscribe({'stateId': this.config.McpIntStateId, 'val': true, 'ack': true, 'cb': async (_stateChange: StateChange) => {
-				await mcp.readInputs();
-			}});
+			await this.subscribe({
+				stateId: this.config.McpIntStateId,
+				val: true,
+				ack: true,
+				cb: async (_stateChange: StateChange) => {
+					await mcp.readInputs();
+				},
+			});
 		}
 
 		// McpResetStateId: an optional virtual "reset" switch a user/automation can flip to ON
@@ -423,30 +528,34 @@ export class RpiIo extends IoAdapter {
 		// restarting the whole adapter instance
 		if (await this.readStateObject(this.config.McpResetStateId)) {
 			// make sure the switch starts OFF (confirmed) on every adapter start
-			await this.writeState(this.config.McpResetStateId, { 'val': false, 'ack': true });
+			await this.writeState(this.config.McpResetStateId, { val: false, ack: true });
 
 			// this one subscription drives a little 3-step state machine on the switch:
 			//   1. user/automation sets it ON               -> confirmed here as ON (ack:true)
 			//   2. that ON is immediately answered with an OFF command, so it snaps back by itself
 			//   3. once that OFF is confirmed (ack:true), wait 200 ms for the chip to settle,
 			//      then actually re-initialize the MCP23017 and re-read its inputs
-			await this.subscribe({'stateId': this.config.McpResetStateId, 'ack': true, 'cb': async (pinState: StateChange) => {
-				// step 1 -> 2: ON confirmed, so immediately command it back OFF
-				if (pinState.val) {
-					await this.writeState( this.config.McpResetStateId, { 'val': false, 'ack': false });
+			await this.subscribe({
+				stateId: this.config.McpResetStateId,
+				ack: true,
+				cb: async (pinState: StateChange) => {
+					// step 1 -> 2: ON confirmed, so immediately command it back OFF
+					if (pinState.val) {
+						await this.writeState(this.config.McpResetStateId, { val: false, ack: false });
 
-				// step 3: OFF confirmed, so the switch has finished its blip -- now do the actual reset
-				} else {
-					this.setTimeout(async () => {
-						await mcp.init();
-						await mcp.readInputs();
-					}, 200);
-				}
-			}});
+						// step 3: OFF confirmed, so the switch has finished its blip -- now do the actual reset
+					} else {
+						this.setTimeout(async () => {
+							await mcp.init();
+							await mcp.readInputs();
+						}, 200);
+					}
+				},
+			});
 		}
 
 		// start
-		await mcp.init();				// set pin directions, output values, ...
-		await mcp.readInputs();			// read pin inputs and call registered callbacks
+		await mcp.init(); // set pin directions, output values, ...
+		await mcp.readInputs(); // read pin inputs and call registered callbacks
 	}
 }
