@@ -11,10 +11,11 @@ nbproject
 iobroker.*.tgz
 
 Thumbs.db
+.commitinfo
 
 # i18n intermediate files
 admin/i18n/flat.txt
 admin/i18n/*/flat.txt
 
-# ASA
-build
+# build output and local extras
+build/
