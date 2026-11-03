@@ -18,7 +18,7 @@
 
 ## Setup
 - Setup rules: `~/.claude/rules/iobroker-adapter.md`; `npm run verify` mirrors CI
-- B-EXTRAS: `iobroker-utils` dependency (`bundledDependencies`, CI `install-command`); `@iobroker/types` stays in `dependencies`; CI `adapter-tests` keeps an `integration-test-command` echo override (the tarball install cannot resolve `@iobroker/adapter-core` for the bundled `iobroker-utils`)
+- B-EXTRAS: `iobroker-utils` dependency (`bundledDependencies`, CI `install-command`); `@iobroker/types` stays in `dependencies`; CI `adapter-tests` keeps an `integration-test-command` echo override (npm does not install the dependencies of the bundled `iobroker-utils` (`@iobroker/adapter-core`, `mysql2`), see `~/.claude/rules/iobroker-adapter.md` D7)
 
 ## Claude Memory
 - **Primary knowledge store**: This `CLAUDE.md` file — all project details and learned patterns should be recorded here, not in `~/.claude/projects/*/memory/`
