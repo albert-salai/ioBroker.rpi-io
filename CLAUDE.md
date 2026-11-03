@@ -16,6 +16,10 @@
   `typescript` as a real dependency (not devDependency), so `npm install` here also builds
   the nested `iobroker-utils` correctly
 
+## Setup
+- Setup rules: `~/.claude/rules/iobroker-adapter.md`; `npm run verify` mirrors CI
+- B-EXTRAS: `iobroker-utils` dependency (`bundledDependencies`, CI `install-command`); `@iobroker/types` stays in `dependencies`
+
 ## Claude Memory
 - **Primary knowledge store**: This `CLAUDE.md` file — all project details and learned patterns should be recorded here, not in `~/.claude/projects/*/memory/`
 
