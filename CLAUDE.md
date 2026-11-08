@@ -2,7 +2,7 @@
 
 **Purpose:** project facts for working on this adapter.
 
-**Audience:** every Claude Code session in this repo.
+**Audience:** every AGENT in this repo.
 
 **Contains:** project facts, setup extras; short imperative rules.
 
