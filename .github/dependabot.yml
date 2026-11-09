@@ -15,8 +15,6 @@ updates:
         versions: [">=7"]
       - dependency-name: "@types/node"
         versions: [">=25"]
-    ignore:
-      - dependency-name: iobroker-utils
 
   - package-ecosystem: github-actions
     directory: "/"

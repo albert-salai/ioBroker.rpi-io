@@ -32,11 +32,6 @@ jobs:
       - uses: ioBroker/testing-action-check@v2
         with:
           node-version: '24.x'
-          install-command: >-
-            git clone --depth=1 https://github.com/albert-salai/ioBroker.utils.git ../iobroker-utils &&
-            npm --prefix ../iobroker-utils ci &&
-            npm --prefix ../iobroker-utils run build &&
-            npm ci
           type-checking: true
           lint: true
 
@@ -55,13 +50,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
-          install-command: >-
-            git clone --depth=1 https://github.com/albert-salai/ioBroker.utils.git ../iobroker-utils &&
-            npm --prefix ../iobroker-utils ci &&
-            npm --prefix ../iobroker-utils run build &&
-            npm ci
           build: true
-          integration-test-command: 'echo \"Integration test not usable: bundled iobroker-utils, unpublished adapter\"'
+          integration-test-command: 'echo \"Integration test not usable: unpublished adapter\"'
 
 # TODO: To enable automatic npm releases, create a token on npmjs.org 
 # Enter this token as a GitHub secret (with name NPM_TOKEN) in the repository options

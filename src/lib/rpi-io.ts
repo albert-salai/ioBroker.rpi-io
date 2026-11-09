@@ -1,5 +1,5 @@
-import { IoAdapter } from 'iobroker-utils';
-import type { StateChange } from 'iobroker-utils';
+import { IoAdapter } from './io-adapter';
+import type { StateChange } from './io-adapter';
 import { I2cBus } from './i2c-bus';
 import { MCP23017 } from './i2c-mcp23017';
 import rpio from 'rpio'; // tried also 'onoff', 'opengpio', 'pigpio', 'pigpio-client' but didn't work
