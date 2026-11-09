@@ -78,5 +78,13 @@
   "bugs": {
     "url": "https://github.com/albert-salai/ioBroker.rpi-io/issues"
   },
-  "readmeFilename": "README.md"
+  "readmeFilename": "README.md",
+  "allowScripts": {
+    "esbuild": true,
+    "diskusage": true,
+    "i2c-bus": true,
+    "rpio": true,
+    "unix-dgram": true,
+    "protobufjs": false
+  }
 }
