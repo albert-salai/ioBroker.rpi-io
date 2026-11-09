@@ -16,4 +16,4 @@ ioBroker adapter for Raspberry Pi I/O; `src/lib/io-adapter.ts` is its `IoAdapter
 ## Setup extras (B-EXTRAS)
 
 Setup rules: `~/.claude/rules/iobroker-adapter.md`. Beyond the baseline: `@iobroker/types` stays in
-`dependencies`, CI `adapter-tests` `integration-test-command` echo override, `.gitignore` entry `.commitinfo`.
+`dependencies`, CI `adapter-tests` `integration-test-command` echo override.
