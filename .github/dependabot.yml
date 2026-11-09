@@ -4,9 +4,10 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
-      time: "04:00"
+      day: 5
+      time: "00:05"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 5
     assignees:
       - albert-salai
     versioning-strategy: increase
@@ -20,8 +21,9 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
-      time: "04:00"
+      day: 5
+      time: "00:05"
       timezone: Europe/Berlin
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 5
     assignees:
       - albert-salai

@@ -17,7 +17,7 @@
 	"dataSource": "poll",
 	"connectionIndicator": "yes",
 	"language": "TypeScript",
-	"nodeVersion": "20",
+	"nodeVersion": "24",
 	"adminUi": "json",
 	"tabReact": "no",
 	"tools": [
@@ -32,9 +32,9 @@
 	"authorGithub": "albert-salai",
 	"authorEmail": "albert2013@salai.de",
 	"gitRemoteProtocol": "SSH",
-	"gitCommit": "yes",
+	"gitCommit": "no",
 	"defaultBranch": "main",
 	"license": "MIT License",
-	"dependabot": "no",
+	"dependabot": "yes",
 	"creatorVersion": "2.6.5"
 }
