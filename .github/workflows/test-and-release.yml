@@ -51,7 +51,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
           os: ${{ matrix.os }}
           build: true
-          integration-test-command: 'echo \"Integration test not usable: unpublished adapter\"'
 
 # TODO: To enable automatic npm releases, create a token on npmjs.org 
 # Enter this token as a GitHub secret (with name NPM_TOKEN) in the repository options
