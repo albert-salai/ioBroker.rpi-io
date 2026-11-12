@@ -20,6 +20,13 @@ The adapter connects the inputs and outputs of a Raspberry Pi to ioBroker:
 
 The user names, configures and adds the pins in the admin settings.
 
+## Contents
+
+- [General](#general): I2C bus, connection state
+- [Outputs of both tabs](#outputs-of-both-tabs)
+- [GPIO](#gpio): debounce, inputs
+- [MCP23017](#mcp23017): INT pin, RESET switch, poll interval, inputs, recovery
+
 ## Scheme
 
 Statements follow the skill `specifying-requirements`. A requirement not yet confirmed by the USER has the ID
@@ -34,37 +41,49 @@ and uses an MCP23017 expander found at address 0x20.**
 
 The settings of the MCP23017 tab apply only when the expander answers.
 
+### Settings
+
+**`INFERRED-SETTINGS`: The settings accept GPIO numbers 1 to 27 (GPIO numbering, not the header pin number) and times
+of 0 s or more; an INT or RESET state that is empty or does not exist switches that feature off.**
+
 ### Connection state
 
 **`INFERRED-CONNECTION`: The connection state is true when the adapter has set up the GPIO pins and scanned the I2C
 bus, and false before that and after a failed set-up.**
 
-A failure of the set-up is written to the log at error level.
+A failure of the set-up, for example an I2C bus that does not open, is written to the log at error level; the GPIO pins
+set up before it keep working. A failure of the MCP23017 after the scan is logged and does not change the state.
 
 ## Outputs of both tabs
+
+The output tables of the GPIO tab and the MCP23017 tab share these requirements.
 
 **`INFERRED-OUTPUT`: For each row of the GPIO output and MCP output tables, the adapter provides a writable boolean
 state; when the user or a script sets the state, the adapter drives the pin to that value, inverted when the row says
 so, and then confirms the state.**
 
-The state has the row's name and role, and its history is kept when the row says so.
+The state has the row's name and role, and its history is kept when the row says so and a history adapter is
+configured. The state sits under the `pin` channel of the instance, named by the row's state column.
 
 **`INFERRED-OUTPUT-START`: At start, an output pin takes the last confirmed value of its state; without one, it takes
-the default value of its row.**
+the row's default.**
 
-A value that was set but not confirmed, for example by a stop during the command, is not trusted.
+The pin takes the level of that value, inverted when the row says so. A value that was set but not confirmed, for
+example by a stop during the command, is not trusted.
 
-**`INFERRED-OUTPUT-AUTO-OFF`: When a row of an output table has an auto-off time above 0 s, the adapter switches the
+**`INFERRED-AUTO-OFF`: When a row of an output table has an auto-off time above 0 s, the adapter switches the
 output off that many seconds after it was confirmed ON.**
 
 ## GPIO
+
+The outputs of this tab follow [Outputs of both tabs](#outputs-of-both-tabs).
 
 ### Input debounce
 
 **`INFERRED-GPIO-DEBOUNCE`: A GPIO input state takes the pin level once the pin has been quiet for the debounce time
 set in the settings; the default is 20 ms, and 0 switches debouncing off.**
 
-The debounce hides the phantom pulses that power-grid glitches cause, mostly when the gas burner switches.
+The debounce hides phantom pulses that power-grid glitches cause.
 
 ### GPIO inputs
 
@@ -72,19 +91,22 @@ The debounce hides the phantom pulses that power-grid glitches cause, mostly whe
 shows the level of the pin, inverted when the row says so.**
 
 The pin is pulled up internally, and the default is inverted, so a pin pulled to ground reads ON. The state has the
-row's name and role, and its history is kept when the row says so. At start the state takes the current pin level.
+row's name and role, and its history is kept when the row says so and a history adapter is configured. At start
+the state takes the current pin level.
 
 **`INFERRED-GPIO-POLL`: When a row of the GPIO input table has a poll time above 0 s, the adapter checks the pin every
-that many seconds, writes the pin level to the state when they differ and logs a warning.**
+that many seconds and writes the pin level to the state when they differ.**
 
-The check covers a pin change that the edge detection missed. The timer starts again after each pin change.
+The check covers a pin change that the edge detection missed; the adapter logs a warning when it corrects the state.
+The timer starts again after each detected pin change.
 
 ## MCP23017
 
+The outputs of this tab follow [Outputs of both tabs](#outputs-of-both-tabs).
+
 ### INT pin
 
-**`INFERRED-MCP-INT`: When the state chosen as INT pin is confirmed ON, the adapter reads the MCP23017 inputs at
-once.**
+**`INFERRED-MCP-INT`: When the state chosen as INT pin is confirmed ON, the adapter reads the MCP23017 inputs.**
 
 The INT pin is a GPIO input wired to the interrupt output of the expander.
 
@@ -93,23 +115,25 @@ The INT pin is a GPIO input wired to the interrupt output of the expander.
 **`INFERRED-MCP-RESET`: When the state chosen as RESET pin is confirmed ON, the adapter commands it OFF; once that OFF
 is confirmed, the adapter waits 200 ms, initializes the MCP23017 again and reads its inputs.**
 
-The state is OFF at each start. It does not drive the reset pin of the chip.
+The state is OFF at each start. Any confirmed OFF of the state starts the initialization.
 
 ### Poll interval
 
 **`INFERRED-MCP-POLL`: The adapter reads all MCP23017 inputs every poll interval, 10 s by default; 0 switches the
-polling off. A difference to the states is written to the states and logged as a warning.**
+polling off.**
 
-The poll covers an interrupt that was missed.
+The poll covers an interrupt that was missed; an input that changed since the last read is written to its state and
+logged as a warning.
 
 ### MCP inputs
 
 **`INFERRED-MCP-INPUT`: For each row of the MCP input table, the adapter provides a read-only boolean state that shows
 the level of the chosen pin (A0 to B7), inverted when the row says so.**
 
-The default is inverted. The state has the row's name and role, and its history is kept when the row says so. At start
-the adapter reads the pins and updates each state that differs. The adapter logs an error for an input on A7 or B7,
-because the chip may use these two pins as outputs only.
+The default is inverted. The state has the row's name and role, and its history is kept when the row says so and a
+history adapter is configured. At start the adapter reads the pins and updates each state that differs. The adapter
+logs an error at start for an input row on A7 or B7. The expander has no pull-up enabled, so an input needs an
+external pull-up.
 
 ### Recovery
 
