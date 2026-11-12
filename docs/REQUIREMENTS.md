@@ -41,7 +41,7 @@ bus, and false before that and after a failed set-up.**
 
 A failure of the set-up is written to the log at error level.
 
-### Outputs
+## Outputs of both tabs
 
 **`INFERRED-OUTPUT`: For each row of the GPIO output and MCP output tables, the adapter provides a writable boolean
 state; when the user or a script sets the state, the adapter drives the pin to that value, inverted when the row says
@@ -88,19 +88,19 @@ once.**
 
 The INT pin is a GPIO input wired to the interrupt output of the expander.
 
-### Poll interval
-
-**`INFERRED-MCP-POLL`: The adapter reads all MCP23017 inputs every poll interval, 10 s by default; 0 switches the
-polling off. A difference to the states is written to the states and logged as a warning.**
-
-The poll covers an interrupt that was missed.
-
 ### RESET switch
 
 **`INFERRED-MCP-RESET`: When the state chosen as RESET pin is confirmed ON, the adapter commands it OFF; once that OFF
 is confirmed, the adapter waits 200 ms, initializes the MCP23017 again and reads its inputs.**
 
 The state is OFF at each start. It does not drive the reset pin of the chip.
+
+### Poll interval
+
+**`INFERRED-MCP-POLL`: The adapter reads all MCP23017 inputs every poll interval, 10 s by default; 0 switches the
+polling off. A difference to the states is written to the states and logged as a warning.**
+
+The poll covers an interrupt that was missed.
 
 ### MCP inputs
 
