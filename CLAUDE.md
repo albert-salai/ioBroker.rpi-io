@@ -13,6 +13,8 @@ ioBroker adapter for Raspberry Pi I/O; `src/lib/io-adapter.ts` is its `IoAdapter
 
 **Path:** `/opt/iobroker/my_modules/ioBroker.rpi-io`; Linux (Raspberry Pi).
 
+**Requirements:** `docs/REQUIREMENTS.md` (IDs `REQ-<NAME>`, D11).
+
 ## Setup extras (B-EXTRAS)
 
 Setup rules: `~/.claude/rules/iobroker-adapter.md`. Beyond the baseline: `@iobroker/types` stays in
