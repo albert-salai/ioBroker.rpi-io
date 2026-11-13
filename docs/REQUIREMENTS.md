@@ -8,7 +8,7 @@
 settings page; written to be read from top to bottom.
 
 **Not here:** how the requirements are built (source comments), the reasons for the ID scheme
-(`~/.claude/rules/iobroker-adapter.md` D11), the hardware notes ([`doc/`](../doc/)).
+(`/opt/iobroker/my_modules/.claude/rules/iobroker-adapter.md` D11), the hardware notes ([`doc/`](../doc/)).
 
 ## Purpose of the adapter
 

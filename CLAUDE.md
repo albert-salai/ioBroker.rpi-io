@@ -6,8 +6,8 @@
 
 **Contains:** project facts, setup extras; short imperative rules.
 
-**Not here:** adapter setup rules (`~/.claude/rules/iobroker-adapter.md`), user-wide and adapter development rules
-(`~/.claude/CLAUDE.md`, skill `developing-adapters`).
+**Not here:** adapter setup rules (`/opt/iobroker/my_modules/.claude/rules/iobroker-adapter.md`), user-wide and adapter
+development rules (`~/.claude/CLAUDE.md`, skill `developing-adapters`).
 
 ioBroker adapter for Raspberry Pi I/O; `src/lib/io-adapter.ts` is its `IoAdapter` base class.
 
@@ -17,5 +17,5 @@ ioBroker adapter for Raspberry Pi I/O; `src/lib/io-adapter.ts` is its `IoAdapter
 
 ## Setup extras (B-EXTRAS)
 
-Setup rules: `~/.claude/rules/iobroker-adapter.md`. Beyond the baseline: `@iobroker/types` stays in
-`dependencies`.
+Setup rules: `/opt/iobroker/my_modules/.claude/rules/iobroker-adapter.md`. Beyond the baseline: `@iobroker/types` stays
+in `dependencies`.
