@@ -42,17 +42,17 @@ has the prefix `INFERRED: ` before its ID.
 
 ### I2C bus
 
-**INFERRED: `REQ-BUS-NUMBER`: The adapter uses an MCP23017 expander at the address 0x20 on the I2C bus whose number (0
+INFERRED: **`REQ-BUS-NUMBER`: The adapter uses an MCP23017 expander at the address 0x20 on the I2C bus whose number (0
 or 1) the user sets in the settings, 1 by default.**
 
 The settings of the MCP23017 tab apply only when the expander answers.
 
 ### Settings
 
-**INFERRED: `REQ-SETTINGS`: The settings accept GPIO numbers 1 to 27 (GPIO numbering, not the header pin number) and
+INFERRED: **`REQ-SETTINGS`: The settings accept GPIO numbers 1 to 27 (GPIO numbering, not the header pin number) and
 times of 0 s or more.**
 
-**INFERRED: `REQ-OPTIONAL-STATE`: An INT or RESET state that is empty or does not exist switches that feature off.**
+INFERRED: **`REQ-OPTIONAL-STATE`: An INT or RESET state that is empty or does not exist switches that feature off.**
 
 **`REQ-ROW-STATE`: The adapter skips a row of an input or output table whose state ID is empty or already used by an
 earlier row of any table, and logs an error naming the row; the other rows keep working.**
@@ -75,14 +75,14 @@ MCP23017 after the set-up is logged and does not change the state.
 
 The output tables of the GPIO tab and the MCP23017 tab share these requirements.
 
-**INFERRED: `REQ-OUTPUT`: For each row of the GPIO output and MCP output tables, the adapter provides a writable boolean
+INFERRED: **`REQ-OUTPUT`: For each row of the GPIO output and MCP output tables, the adapter provides a writable boolean
 state; when the user or a script sets the state, the adapter sets the pin to that value, inverted when the row says so,
 and then confirms the state.**
 
 The state has the row's name and role, and its history is kept when the row says so and a history adapter is
 configured. The state sits under the `pin` channel of the instance, named by the row's state column.
 
-**INFERRED: `REQ-OUTPUT-START`: At start, an output pin takes the last confirmed value of its state; without one, it
+INFERRED: **`REQ-OUTPUT-START`: At start, an output pin takes the last confirmed value of its state; without one, it
 takes the row's default.**
 
 The pin takes the level of that value, inverted when the row says so. A value that was set but not confirmed, for
@@ -101,28 +101,28 @@ The outputs of this tab follow [Outputs of both tabs](#outputs-of-both-tabs).
 
 ### Input debounce
 
-**INFERRED: `REQ-GPIO-DEBOUNCE`: A GPIO input state takes the pin level once the pin has been quiet for the debounce
+INFERRED: **`REQ-GPIO-DEBOUNCE`: A GPIO input state takes the pin level once the pin has been quiet for the debounce
 time set in the settings; the default is 20 ms, and 0 switches debouncing off.**
 
 The debounce hides phantom pulses that power-grid glitches cause.
 
 ### GPIO inputs
 
-**INFERRED: `REQ-GPIO-INPUT`: For each row of the GPIO input table, the adapter provides a read-only boolean state that
+INFERRED: **`REQ-GPIO-INPUT`: For each row of the GPIO input table, the adapter provides a read-only boolean state that
 shows the level of the pin, inverted when the row says so.**
 
 The pin is pulled up internally, and the default is inverted, so a pin pulled to ground reads ON. The state has the
 row's name and role, and its history is kept when the row says so and a history adapter is configured. At start
 the state takes the current pin level.
 
-**INFERRED: `REQ-GPIO-POLL`: When a row of the GPIO input table has a poll time above 0 s, the adapter checks the pin
+INFERRED: **`REQ-GPIO-POLL`: When a row of the GPIO input table has a poll time above 0 s, the adapter checks the pin
 after that many seconds without a pin change and writes the pin level to the state when they differ.**
 
 The check covers a pin change that the adapter did not notice; the adapter logs a warning when it corrects the state.
 
 ### Stop
 
-**INFERRED: `REQ-STOP-EDGE`: When the adapter stops, it switches off the edge detection of all GPIO input pins.**
+INFERRED: **`REQ-STOP-EDGE`: When the adapter stops, it switches off the edge detection of all GPIO input pins.**
 
 Edge detection left on can latch events that nobody clears and lock up a CPU of the Pi in an interrupt storm.
 
@@ -132,7 +132,7 @@ The outputs of this tab follow [Outputs of both tabs](#outputs-of-both-tabs).
 
 ### INT pin
 
-**INFERRED: `REQ-MCP-INT`: When the state chosen as INT pin is confirmed ON, the adapter updates the MCP input states
+INFERRED: **`REQ-MCP-INT`: When the state chosen as INT pin is confirmed ON, the adapter updates the MCP input states
 from the MCP23017.**
 
 The INT pin is a GPIO input wired to the interrupt output of the expander, so an input change shows without waiting for
@@ -140,7 +140,7 @@ the poll interval.
 
 ### RESET switch
 
-**INFERRED: `REQ-MCP-RESET`: When the state chosen as RESET pin is confirmed ON, the adapter initializes the MCP23017
+INFERRED: **`REQ-MCP-RESET`: When the state chosen as RESET pin is confirmed ON, the adapter initializes the MCP23017
 again and updates the MCP input states, without a restart of the adapter.**
 
 The state switches itself back to OFF, and the initialization starts 200 ms after that OFF is confirmed; any confirmed
@@ -149,7 +149,7 @@ adapter; whichever adapter writes the OFF with ack confirms it (MAINTAINER, 2026
 
 ### Poll interval
 
-**INFERRED: `REQ-MCP-POLL`: The adapter updates the MCP input states from the MCP23017 every poll interval, 10 s by
+INFERRED: **`REQ-MCP-POLL`: The adapter updates the MCP input states from the MCP23017 every poll interval, 10 s by
 default; 0 switches the polling off.**
 
 The poll covers an interrupt that was missed; an input that changed since the last read is written to its state and
@@ -157,7 +157,7 @@ logged as a warning.
 
 ### MCP inputs
 
-**INFERRED: `REQ-MCP-INPUT`: For each row of the MCP input table, the adapter provides a read-only boolean state that
+INFERRED: **`REQ-MCP-INPUT`: For each row of the MCP input table, the adapter provides a read-only boolean state that
 shows the level of the chosen pin (A0 to B7), inverted when the row says so.**
 
 The default is inverted. The state has the row's name and role, and its history is kept when the row says so and a
