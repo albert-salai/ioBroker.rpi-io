@@ -19,3 +19,6 @@ admin/i18n/*/flat.txt
 
 # build output and local extras
 build/
+
+# agent plan files (never committed)
+/plans/
