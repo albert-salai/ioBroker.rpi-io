@@ -4,7 +4,7 @@
 
 **Audience:** every AGENT in this repo.
 
-**Contains:** project facts, setup extras; short imperative rules.
+**Contains:** project facts, setup extras.
 
 **Not here:** rules for all adapter repos (`/opt/iobroker/my_modules/CLAUDE.md`, skill `developing-adapters`).
 
@@ -16,5 +16,4 @@ ioBroker adapter for Raspberry Pi I/O; `src/lib/io-adapter.ts` is its `IoAdapter
 
 ## Setup extras (B-EXTRAS)
 
-Beyond the baseline: `@iobroker/types` stays
-in `dependencies`.
+Beyond the baseline: `@iobroker/types` stays in `dependencies`.
