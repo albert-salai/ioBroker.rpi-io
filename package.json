@@ -69,11 +69,12 @@
     "test:ts": "mocha --config test/mocharc.custom.json src/**/*.test.ts",
     "test:package": "mocha test/package --exit",
     "test:integration": "mocha test/integration --exit",
-    "test": "npm run test:ts && npm run test:package",
+    "test": "npm run test:ts && npm run test:package && npm run check:reqs",
     "check": "tsc --noEmit",
     "lint": "eslint -c eslint.config.mjs .",
     "translate": "translate-adapter",
-    "verify": "npm run check && npm run lint && npm run build && npm test"
+    "verify": "npm run check && npm run lint && npm run build && npm test",
+    "check:reqs": "node scripts/check-traceability.js"
   },
   "bugs": {
     "url": "https://github.com/albert-salai/ioBroker.rpi-io/issues"
