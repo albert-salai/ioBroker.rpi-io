@@ -36,10 +36,10 @@ has the prefix `INFERRED: ` before its ID.
 
 ### I2C bus
 
-**INFERRED: `REQ-BUS-NUMBER`: The adapter scans the I2C bus whose number (0 or 1) the user sets in the settings, 1 by
-default, and uses an MCP23017 expander found at address 0x20.**
+**INFERRED: `REQ-BUS-NUMBER`: The adapter uses an MCP23017 expander on the I2C bus whose number (0 or 1) the user sets
+in the settings, 1 by default.**
 
-The settings of the MCP23017 tab apply only when the expander answers.
+The expander must have the address 0x20. The settings of the MCP23017 tab apply only when the expander answers.
 
 ### Settings
 
@@ -48,19 +48,19 @@ times of 0 s or more; an INT or RESET state that is empty or does not exist swit
 
 ### Connection state
 
-**INFERRED: `REQ-CONNECTION`: The connection state is true when the adapter has set up the GPIO pins and scanned the I2C
-bus, and false before that and after a failed set-up.**
+**INFERRED: `REQ-CONNECTION`: The connection state is true once the adapter has set up its pins, and false before that
+and after a failed set-up.**
 
 A failure of the set-up, for example an I2C bus that does not open, is written to the log at error level; the GPIO pins
-set up before it keep working. A failure of the MCP23017 after the scan is logged and does not change the state.
+set up before it keep working. A failure of the MCP23017 after the set-up is logged and does not change the state.
 
 ## Outputs of both tabs
 
 The output tables of the GPIO tab and the MCP23017 tab share these requirements.
 
 **INFERRED: `REQ-OUTPUT`: For each row of the GPIO output and MCP output tables, the adapter provides a writable boolean
-state; when the user or a script sets the state, the adapter drives the pin to that value, inverted when the row says
-so, and then confirms the state.**
+state; when the user or a script sets the state, the adapter sets the pin to that value, inverted when the row says so,
+and then confirms the state.**
 
 The state has the row's name and role, and its history is kept when the row says so and a history adapter is
 configured. The state sits under the `pin` channel of the instance, named by the row's state column.
@@ -97,8 +97,7 @@ the state takes the current pin level.
 **INFERRED: `REQ-GPIO-POLL`: When a row of the GPIO input table has a poll time above 0 s, the adapter checks the pin
 every that many seconds and writes the pin level to the state when they differ.**
 
-The check covers a pin change that the edge detection missed; the adapter logs a warning when it corrects the state.
-The timer starts again after each detected pin change.
+The check covers a pin change that the adapter did not notice; the adapter logs a warning when it corrects the state.
 
 ## MCP23017
 
@@ -106,21 +105,24 @@ The outputs of this tab follow [Outputs of both tabs](#outputs-of-both-tabs).
 
 ### INT pin
 
-**INFERRED: `REQ-MCP-INT`: When the state chosen as INT pin is confirmed ON, the adapter reads the MCP23017 inputs.**
+**INFERRED: `REQ-MCP-INT`: When the state chosen as INT pin is confirmed ON, the adapter updates the MCP input states
+from the MCP23017.**
 
-The INT pin is a GPIO input wired to the interrupt output of the expander.
+The INT pin is a GPIO input wired to the interrupt output of the expander, so an input change shows without waiting for
+the poll interval.
 
 ### RESET switch
 
-**INFERRED: `REQ-MCP-RESET`: When the state chosen as RESET pin is confirmed ON, the adapter commands it OFF; once that
-OFF is confirmed, the adapter waits 200 ms, initializes the MCP23017 again and reads its inputs.**
+**INFERRED: `REQ-MCP-RESET`: When the state chosen as RESET pin is confirmed ON, the adapter initializes the MCP23017
+again and updates the MCP input states, without a restart of the adapter.**
 
-The state is OFF at each start. Any confirmed OFF of the state starts the initialization.
+The state switches itself back to OFF, and the initialization starts 200 ms after that OFF is confirmed; any confirmed
+OFF of the state starts it. The state is OFF at each start.
 
 ### Poll interval
 
-**INFERRED: `REQ-MCP-POLL`: The adapter reads all MCP23017 inputs every poll interval, 10 s by default; 0 switches the
-polling off.**
+**INFERRED: `REQ-MCP-POLL`: The adapter updates the MCP input states from the MCP23017 every poll interval, 10 s by
+default; 0 switches the polling off.**
 
 The poll covers an interrupt that was missed; an input that changed since the last read is written to its state and
 logged as a warning.
