@@ -4,6 +4,8 @@ import { I2cBus } from './i2c-bus';
 import { MCP23017 } from './i2c-mcp23017';
 import rpio from 'rpio'; // tried also 'onoff', 'opengpio', 'pigpio', 'pigpio-client' but didn't work
 import debounce from 'debounce';
+import { checkRows } from './rows';
+import { autoOff } from './auto-off';
 
 // Note on GPIO pins: power-grid glitches can cause "phantom" GPIO events -- the pin briefly
 // reports a change that didn't really happen. This is worst when the gas burner switches on
@@ -45,6 +47,13 @@ export class RpiIo extends IoAdapter {
 		try {
 			await this.setState('info.connection', false, true);
 			await super.onReady();
+
+			// REQ-ROW-STATE, REQ-ROW-PIN: skip invalid rows, keep the others
+			const { rows, errors } = checkRows(this.config);
+			for (const error of errors) {
+				this.log.error(error);
+			}
+			Object.assign(this.config, rows);
 			//this.logf.debug('%-15s %-15s %-40s\n%s', this.constructor.name, 'onReady()', 'config', JSON.stringify(this.config, null, 4));
 
 			const channelId = `${this.namespace}.pin`;
@@ -263,20 +272,42 @@ export class RpiIo extends IoAdapter {
 				},
 			});
 
-			// momentary/pulse output: once the ON command is confirmed (ack:true), start a timer and
-			// command it back OFF after autoOffSecs seconds (e.g. a garage-door trigger or doorbell relay)
+			// REQ-AUTO-OFF, REQ-OFF-CANCEL: momentary/pulse output (e.g. a garage-door trigger or doorbell relay):
+			// a confirmed ON (also one restored at start) starts a timer that commands OFF after autoOffSecs,
+			// a confirmed OFF cancels it
 			if (output.autoOffSecs > 0) {
-				await this.subscribe({
-					stateId,
-					val: true,
-					ack: true,
-					cb: (_stateChange: StateChange) => {
-						this.setTimeout(() => {
-							void this.writeState(stateId, { val: false, ack: false });
-						}, 1000 * output.autoOffSecs);
-					},
-				});
+				await this.subscribeAutoOff(stateId, output.autoOffSecs);
 			}
+		}
+	}
+
+	/**
+	 * Starts the auto-off timer of an output on each confirmed ON and on a confirmed ON restored at start.
+	 *
+	 * @param stateId the output state
+	 * @param autoOffSecs the auto-off time
+	 */
+	private async subscribeAutoOff(stateId: string, autoOffSecs: number): Promise<void> {
+		const confirmed = autoOff<ioBroker.Timeout | undefined>(
+			1000 * autoOffSecs,
+			{
+				setTimeout: (cb, ms) => this.setTimeout(cb, ms),
+				clearTimeout: timer => {
+					this.clearTimeout(timer);
+				},
+			},
+			() => void this.writeState(stateId, { val: false, ack: false }),
+		);
+		await this.subscribe({
+			stateId,
+			ack: true,
+			cb: (stateChange: StateChange) => {
+				confirmed(stateChange.val === true);
+			},
+		});
+		const pinState = await this.readState(stateId);
+		if (pinState?.val === true && pinState.ack) {
+			confirmed(true);
 		}
 	}
 
@@ -493,19 +524,11 @@ export class RpiIo extends IoAdapter {
 				},
 			});
 
-			// momentary/pulse output: once the ON command is confirmed (ack:true), start a timer and
-			// command it back OFF after autoOffSecs seconds (e.g. a garage-door trigger or doorbell relay)
+			// REQ-AUTO-OFF, REQ-OFF-CANCEL: momentary/pulse output (e.g. a garage-door trigger or doorbell relay):
+			// a confirmed ON (also one restored at start) starts a timer that commands OFF after autoOffSecs,
+			// a confirmed OFF cancels it
 			if (output.autoOffSecs > 0) {
-				await this.subscribe({
-					stateId,
-					val: true,
-					ack: true,
-					cb: (_stateChange: StateChange) => {
-						this.setTimeout(() => {
-							void this.writeState(stateId, { val: false, ack: false });
-						}, 1000 * output.autoOffSecs);
-					},
-				});
+				await this.subscribeAutoOff(stateId, output.autoOffSecs);
 			}
 		}
 
@@ -554,8 +577,10 @@ export class RpiIo extends IoAdapter {
 			});
 		}
 
-		// start
-		await mcp.init(); // set pin directions, output values, ...
+		// start; REQ-CONNECTION: a failed chip init keeps the connection state false (onReady() catches)
+		if (!(await mcp.init())) {
+			throw new Error(`MCP23017 0x${i2cAddr.toString(16)} init failed`);
+		}
 		await mcp.readInputs(); // read pin inputs and call registered callbacks
 	}
 }

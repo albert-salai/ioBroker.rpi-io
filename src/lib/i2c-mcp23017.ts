@@ -169,7 +169,8 @@ export class MCP23017 {
 		}
 	}
 
-	public async init(): Promise<void> {
+	/* Writes the configuration to the chip; returns false (error logged) when the bus fails. */
+	public async init(): Promise<boolean> {
 		this.logf.debug('%-15s %-15s %-10s %-40s', this.constructor.name, 'init()', '', '');
 
 		try {
@@ -184,6 +185,7 @@ export class MCP23017 {
 			// state that changed physically while the adapter was not running
 			await this.i2c.readWord(this.addr, Register.GPIOA);
 			await this.i2c.writeWord(this.addr, Register.GPINTENA, this.inputMask);
+			return true;
 		} catch (e: unknown) {
 			this.logf.error(
 				'%-15s %-15s %-10s %-40s',
@@ -192,10 +194,17 @@ export class MCP23017 {
 				'',
 				e instanceof Error ? e.stack : JSON.stringify(e),
 			);
+			return false;
 		}
 	}
 
+	/* Reads the inputs and calls the callbacks of the changed ones; returns the mask of the changed inputs. */
 	public async readInputs(): Promise<number> {
+		return this.read(true);
+	}
+
+	// REQ-MCP-RECOVER: an unconfigured chip is re-initialized at most once per read (reinit true)
+	private async read(reinit: boolean): Promise<number> {
 		let pinChange = 0;
 		try {
 			// ioconb intFlags, gpioVals
@@ -248,6 +257,9 @@ export class MCP23017 {
 					gpioa,
 					gpiob,
 				);
+				if (!reinit) {
+					return pinChange;
+				}
 				this.logf.error(
 					'%-15s %-15s %-10s %-40s',
 					this.constructor.name,
@@ -256,8 +268,7 @@ export class MCP23017 {
 					're-initializing mcp...',
 				);
 				await this.init();
-				pinChange = await this.readInputs();
-				return pinChange;
+				return await this.read(false);
 			}
 
 			// get changed input pin values
@@ -277,7 +288,7 @@ export class MCP23017 {
 			// try again
 			const intFlags = (intfb << 8) | intfa; // INTFB, INTFA
 			if (intFlags !== 0x0000) {
-				return await this.readInputs();
+				return await this.read(reinit);
 			}
 		} catch (e: unknown) {
 			this.logf.error(
