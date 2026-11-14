@@ -1,4 +1,5 @@
 // This file extends the AdapterConfig type from '@types/iobroker'
+// The settings page (admin/jsonConfig.json5) limits these fields to the ranges of REQ-SETTINGS.
 
 // Augment the globally declared type ioBroker.AdapterConfig
 declare global {

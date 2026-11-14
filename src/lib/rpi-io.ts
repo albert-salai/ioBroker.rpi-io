@@ -71,6 +71,7 @@ export class RpiIo extends IoAdapter {
 	}
 
 	/**
+	 * Stops the adapter (REQ-STOP-EDGE): switches off the edge detection of all GPIO input pins.
 	 *
 	 * @param callback
 	 */
@@ -93,6 +94,8 @@ export class RpiIo extends IoAdapter {
 	}
 
 	/**
+	 * Creates the GPIO input and output states and pins (REQ-GPIO-INPUT, REQ-GPIO-DEBOUNCE, REQ-GPIO-POLL,
+	 * REQ-OUTPUT, REQ-OUTPUT-START).
 	 *
 	 * @param channelId
 	 */
@@ -312,6 +315,7 @@ export class RpiIo extends IoAdapter {
 	}
 
 	/**
+	 * Opens the I2C bus of the configured number and looks for the MCP23017 at 0x20 (REQ-BUS-NUMBER).
 	 *
 	 * @param channelId
 	 */
@@ -365,6 +369,9 @@ export class RpiIo extends IoAdapter {
 	}
 
 	/**
+	 * Creates the MCP23017 input and output states and pins (REQ-MCP-INPUT, REQ-OUTPUT, REQ-OUTPUT-START),
+	 * polls the inputs (REQ-MCP-POLL) and wires the optional INT and RESET states (REQ-MCP-INT, REQ-MCP-RESET,
+	 * REQ-OPTIONAL-STATE).
 	 *
 	 * @param channelId
 	 * @param i2cBus
