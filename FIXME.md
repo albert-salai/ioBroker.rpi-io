@@ -16,7 +16,7 @@ debug: rpi-io.0 (<pid>)  MCP23017  init()
 
 **Current root cause (leading theory):** a genuine MCP23017 chip reset (POR or hardware `RESET`
 pin glitch), not a corrupted/short I2C transaction. Per the official datasheet
-(`doc/MCP23017-Datasheet-DS20001952.pdf`, Table 3-5 register summary), **all 7 non-GPIO registers
+(`external/MCP23017-Datasheet-DS20001952.pdf`, Table 3-5 register summary), **all 7 non-GPIO registers
 in the 9-byte block `readInputs()` reads (`IOCON`, `GPPUA`, `GPPUB`, `INTFA`, `INTFB`, `INTCAPA`,
 `INTCAPB`, addresses `0x0B`–`0x11`) have POR/RST default `0000 0000`** — identical to the observed
 `ioconb` value. `IOCONB` reading exactly `0x00` is not an arbitrary/scrambled byte; it's precisely

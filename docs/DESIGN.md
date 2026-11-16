@@ -9,7 +9,7 @@ per group of requirements; written to be read from top to bottom.
 
 **Not here:** the requirements ([`REQUIREMENTS.md`](REQUIREMENTS.md)), how the code works (the code and its comments),
 the reasons for the traceability scheme (`/opt/iobroker/my_modules/.claude/rules/iobroker-adapter.md` D11), the hardware
-notes ([`doc/`](../doc/)).
+notes ([`external/`](../external/)).
 
 ## Contents
 
