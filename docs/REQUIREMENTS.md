@@ -5,7 +5,8 @@
 **Audience:** the MAINTAINER of this adapter and every AGENT that traces a change to its requirements.
 
 **Contains:** the purpose of the adapter, the ID scheme, and the requirements, in sections per tab of the adapter's
-settings page and one section for the outputs that both tabs share; written to be read from top to bottom.
+settings page and one section for the outputs that both tabs share, each section opening with its goal; written to be
+read from top to bottom.
 
 **Not here:** how the requirements are built (source comments), the reasons for the ID scheme
 (`/opt/iobroker/my_modules/.claude/rules/iobroker-adapter.md` D11), the hardware notes ([`external/`](../external/)).
@@ -40,6 +41,9 @@ has the prefix `INFERRED: ` before its ID.
 
 ## General
 
+**Goal:** The END USER wants to connect the adapter to the I2C bus and set it up with valid settings, so that the
+adapter shows when it is ready.
+
 ### I2C bus
 
 **`REQ-BUS-NUMBER`: The adapter uses an MCP23017 expander at the address 0x20 on the I2C bus whose number (0
@@ -73,6 +77,9 @@ MCP23017 after the set-up is logged and does not change the state.
 
 ## Outputs of both tabs
 
+**Goal:** The END USER wants to switch a relay or other load from a state, so that the load follows a command from the
+user or a script without further wiring.
+
 The output tables of the GPIO tab and the MCP23017 tab share these requirements.
 
 **`REQ-OUTPUT`: For each row of the GPIO output and MCP output tables, the adapter provides a writable boolean
@@ -96,6 +103,9 @@ An ON that the adapter restores at start counts as confirmed ON and starts a ful
 **`REQ-OFF-CANCEL`: When an output is confirmed OFF, the adapter cancels its running auto-off timer.**
 
 ## GPIO
+
+**Goal:** The END USER wants to read a switch or sensor on a GPIO pin as a state, so that a script or the history can
+use it without glitches.
 
 The outputs of this tab follow [Outputs of both tabs](#outputs-of-both-tabs).
 
@@ -127,6 +137,9 @@ The check covers a pin change that the adapter did not notice; the adapter logs 
 Edge detection left on can latch events that nobody clears and lock up a CPU of the Pi in an interrupt storm.
 
 ## MCP23017
+
+**Goal:** The END USER wants to add the pins of an MCP23017 expander as inputs and outputs, so that the Pi has more pins
+and an input change shows without delay.
 
 The outputs of this tab follow [Outputs of both tabs](#outputs-of-both-tabs).
 
