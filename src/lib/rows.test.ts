@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { checkRows } from './rows';
 
 const gpioIn = (gpioNum: number, state: string): ioBroker.AdapterConfig['GpioInput'][number] => ({
@@ -82,6 +84,16 @@ describe('checkRows', () => {
 			McpInput: [mcpIn('A0', 'b')],
 			McpOutput: [],
 		});
+		assert.deepEqual(errors, []);
+	});
+
+	// A fresh instance has no saved settings: the defaults of io-package.json are all it has.
+	it('accepts the default settings of io-package.json (REQ-ROW-STATE, REQ-ROW-PIN)', () => {
+		const ioPackage = JSON.parse(readFileSync(path.join(__dirname, '../../io-package.json'), 'utf-8')) as {
+			native: ioBroker.AdapterConfig;
+		};
+		const { rows, errors } = checkRows(ioPackage.native);
+		assert.deepEqual(rows, { GpioInput: [], GpioOutput: [], McpInput: [], McpOutput: [] });
 		assert.deepEqual(errors, []);
 	});
 });

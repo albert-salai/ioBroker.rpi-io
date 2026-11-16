@@ -100,7 +100,17 @@
       }
     ]
   },
-  "native": {},
+  "native": {
+    "I2cBusNb": 1,
+    "GpioDebounceMs": 20,
+    "GpioInput": [],
+    "GpioOutput": [],
+    "McpIntStateId": "",
+    "McpResetStateId": "",
+    "McpPollSecs": 10,
+    "McpInput": [],
+    "McpOutput": []
+  },
   "objects": [],
   "instanceObjects": [
     {
