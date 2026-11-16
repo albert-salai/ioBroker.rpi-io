@@ -260,7 +260,7 @@ export class MCP23017 {
 				if (!reinit) {
 					return pinChange;
 				}
-				this.logf.error(
+				this.logf.warn(
 					'%-15s %-15s %-10s %-40s',
 					this.constructor.name,
 					'readInputs()',

@@ -8,7 +8,7 @@ hits, at no fixed interval. Current I2C config (`/boot/firmware/config.txt`):
 
 ```
 error: rpi-io.0 (<pid>)  MCP23017  readInputs()  ioconb  0b00000000
-error: rpi-io.0 (<pid>)  MCP23017  readInputs()          re-initializing mcp...
+warn:  rpi-io.0 (<pid>)  MCP23017  readInputs()          re-initializing mcp...
 debug: rpi-io.0 (<pid>)  MCP23017  init()
 ```
 
