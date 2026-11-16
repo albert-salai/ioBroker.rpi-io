@@ -118,8 +118,8 @@ export class MCP23017 {
 	 * @param cb
 	 * @param options
 	 */
-	public register_pin(options: PinOptions): void {
-		//this.log.debug('%-15s %-15s %-10s %-40s %-10s %-7s %-3s', this.constructor.name, 'register_pin()', `MCP-${pinNum < 8 ? 'A' : 'B'}-${pinNum % 8}`, '', (pol === McpPol.ACTIVE_LOW ? 'inverted' : ''), (dir === McpDir.INPUT ? 'INPUT' : 'OUTPUT'), (level ? 'ON' : 'OFF'));
+	public registerPin(options: PinOptions): void {
+		//this.log.debug('%-15s %-15s %-10s %-40s %-10s %-7s %-3s', this.constructor.name, 'registerPin()', `MCP-${pinNum < 8 ? 'A' : 'B'}-${pinNum % 8}`, '', (pol === McpPol.ACTIVE_LOW ? 'inverted' : ''), (dir === McpDir.INPUT ? 'INPUT' : 'OUTPUT'), (level ? 'ON' : 'OFF'));
 		const isInput = !!options.onChange;
 		const initVal = options.initVal;
 		const pinName = options.pinName;
@@ -131,7 +131,7 @@ export class MCP23017 {
 			this.logf.error(
 				'%-15s %-15s %-25s 0b%016b',
 				this.constructor.name,
-				'register_pin()',
+				'registerPin()',
 				'pin A7',
 				'may be output only',
 			);
@@ -140,7 +140,7 @@ export class MCP23017 {
 			this.logf.error(
 				'%-15s %-15s %-25s 0b%016b',
 				this.constructor.name,
-				'register_pin()',
+				'registerPin()',
 				'pin B7',
 				'may be output only',
 			);

@@ -18,6 +18,7 @@ import { autoOff } from './auto-off';
 // Measured CPU of this adapter process on the Pi (8 inputs):
 // 1 ms about 10%, 2 ms about 2.3%, 3 ms about 2%, 4 ms about 2%, 5 ms about 1.7%, 10 ms about 0.9%.
 // Interval (ms) of the timer rpio.poll() creates, replacing rpio's 1 ms:
+const MS_PER_SECOND = 1000;
 const GPIO_EVENT_POLL_MS = 10;
 
 // start rpio's event polling timer (created by the first rpio.poll() call) with GPIO_EVENT_POLL_MS
@@ -58,8 +59,8 @@ export class RpiIo extends IoAdapter {
 
 			const channelId = `${this.namespace}.pin`;
 			await this.writeChannelObj(channelId, { name: 'Pin' });
-			await this.init_gpio(channelId);
-			await this.init_i2c(channelId);
+			await this.initGpio(channelId);
+			await this.initI2c(channelId);
 
 			// ready
 			await this.setState('info.connection', true, true);
@@ -99,8 +100,8 @@ export class RpiIo extends IoAdapter {
 	 *
 	 * @param channelId
 	 */
-	private async init_gpio(channelId: string): Promise<void> {
-		this.logf.info('%-15s %-15s', this.constructor.name, 'init_gpio()');
+	private async initGpio(channelId: string): Promise<void> {
+		this.logf.info('%-15s %-15s', this.constructor.name, 'initGpio()');
 
 		// Use the GPIOxx numbering
 		rpio.init({ mapping: 'gpio' });
@@ -117,7 +118,7 @@ export class RpiIo extends IoAdapter {
 			this.logf.debug(
 				'%-15s %-15s %-10s %-50s %-25s %s',
 				this.constructor.name,
-				'init_gpio()',
+				'initGpio()',
 				'input',
 				stateId,
 				name,
@@ -166,7 +167,7 @@ export class RpiIo extends IoAdapter {
 								this.logf.warn(
 									'%-15s %-15s %-10s %-50s %s after %d s',
 									this.constructor.name,
-									'init_gpio()',
+									'initGpio()',
 									'pollTimer',
 									name,
 									pinVal ? 'ON' : 'OFF',
@@ -176,7 +177,7 @@ export class RpiIo extends IoAdapter {
 							}
 							pollTimer = null;
 							pollRestart();
-						}, 1000 * pollSecs) ?? null;
+						}, MS_PER_SECOND * pollSecs) ?? null;
 				}
 			};
 
@@ -223,7 +224,7 @@ export class RpiIo extends IoAdapter {
 			this.logf.debug(
 				'%-15s %-15s %-10s %-50s %-25s %s',
 				this.constructor.name,
-				'init_gpio()',
+				'initGpio()',
 				'output',
 				stateId,
 				output.name,
@@ -292,7 +293,7 @@ export class RpiIo extends IoAdapter {
 	 */
 	private async subscribeAutoOff(stateId: string, autoOffSecs: number): Promise<void> {
 		const confirmed = autoOff<ioBroker.Timeout | undefined>(
-			1000 * autoOffSecs,
+			MS_PER_SECOND * autoOffSecs,
 			{
 				setTimeout: (cb, ms) => this.setTimeout(cb, ms),
 				clearTimeout: timer => {
@@ -319,15 +320,15 @@ export class RpiIo extends IoAdapter {
 	 *
 	 * @param channelId
 	 */
-	private async init_i2c(channelId: string): Promise<void> {
-		this.logf.info('%-15s %-15s', this.constructor.name, 'init_i2c()');
+	private async initI2c(channelId: string): Promise<void> {
+		this.logf.info('%-15s %-15s', this.constructor.name, 'initI2c()');
 		this.i2cBus = await I2cBus.open(this.config.I2cBusNb);
 
 		const i2cAddrs = await this.i2cBus.scan();
 		this.logf.debug(
 			'%-15s %-15s %-10s %-50s',
 			this.constructor.name,
-			'init_i2c()',
+			'initI2c()',
 			'devices',
 			JSON.stringify(i2cAddrs.map(addr => `0x${addr.toString(16)}`)),
 		);
@@ -335,14 +336,14 @@ export class RpiIo extends IoAdapter {
 		for (const i2cAddr of i2cAddrs) {
 			// found MCP23017
 			if (i2cAddr === 0x20) {
-				await this.init_mcp23017(channelId, this.i2cBus, i2cAddr);
+				await this.initMcp23017(channelId, this.i2cBus, i2cAddr);
 
 				// found MCP2324
 			} else if (i2cAddr === 0x68) {
 				this.logf.debug(
 					'%-15s %-15s %-10s MCP2324 0x%02X not implemented',
 					this.constructor.name,
-					'init_i2c()',
+					'initI2c()',
 					'',
 					i2cAddr,
 				);
@@ -352,7 +353,7 @@ export class RpiIo extends IoAdapter {
 				this.logf.debug(
 					'%-15s %-15s %-10s DS2482 0x%02X not implemented',
 					this.constructor.name,
-					'init_i2c()',
+					'initI2c()',
 					'',
 					i2cAddr,
 				);
@@ -360,7 +361,7 @@ export class RpiIo extends IoAdapter {
 				this.logf.debug(
 					'%-15s %-15s %-10s I2C device 0x%02X not implemented',
 					this.constructor.name,
-					'init_i2c()',
+					'initI2c()',
 					'error',
 					i2cAddr,
 				);
@@ -377,8 +378,8 @@ export class RpiIo extends IoAdapter {
 	 * @param i2cBus
 	 * @param i2cAddr
 	 */
-	private async init_mcp23017(channelId: string, i2cBus: I2cBus, i2cAddr: number): Promise<void> {
-		this.logf.debug('%-15s %-15s %-10s MCP23017 0x%02X', this.constructor.name, 'init_mcp23017()', '', i2cAddr);
+	private async initMcp23017(channelId: string, i2cBus: I2cBus, i2cAddr: number): Promise<void> {
+		this.logf.debug('%-15s %-15s %-10s MCP23017 0x%02X', this.constructor.name, 'initMcp23017()', '', i2cAddr);
 
 		// create mcp IoDevice
 		const mcp = new MCP23017({
@@ -396,7 +397,7 @@ export class RpiIo extends IoAdapter {
 			this.logf.debug(
 				'%-15s %-15s %-10s %-50s %-25s %s',
 				this.constructor.name,
-				'init_mcp23017()',
+				'initMcp23017()',
 				'input',
 				stateId,
 				input.name,
@@ -424,7 +425,7 @@ export class RpiIo extends IoAdapter {
 			}
 
 			// open MCP23017 INPUT pin
-			mcp.register_pin({
+			mcp.registerPin({
 				pinName: input.mcpPin,
 				initVal: pinVal,
 				onChange: async (phy: boolean) => {
@@ -452,7 +453,7 @@ export class RpiIo extends IoAdapter {
 						pinChange,
 					);
 				}
-			}, 1000 * this.config.McpPollSecs);
+			}, MS_PER_SECOND * this.config.McpPollSecs);
 		}
 
 		// subscribe with an empty callback so ioBroker still records/logs every
@@ -478,7 +479,7 @@ export class RpiIo extends IoAdapter {
 			this.logf.debug(
 				'%-15s %-15s %-10s %-50s %-25s %s',
 				this.constructor.name,
-				'init_mcp23017()',
+				'initMcp23017()',
 				'output',
 				stateId,
 				output.name,
@@ -512,7 +513,7 @@ export class RpiIo extends IoAdapter {
 			// pinVal (corrected above for a not-yet-acked state) also becomes the physical pin's
 			// initial level once mcp.init() writes it to OLATA -- so the NACK fallback to
 			// output.default corrects both the ioBroker state and the physical MCP pin together
-			mcp.register_pin({ pinName: output.mcpPin, initVal: pinVal !== output.inverted });
+			mcp.registerPin({ pinName: output.mcpPin, initVal: pinVal !== output.inverted });
 		}
 
 		// subscribe output state change changes

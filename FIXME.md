@@ -93,6 +93,6 @@ the poll silently returns 0 pin changes for that cycle without triggering re-ini
   couples onto the physically nearby SDA/SCL lines and corrupts the block read directly. Not
   confirmable yet: `rpi-io.0.pin.mcp_int` has `history: false` in `GpioInput` config, so there's no
   record of whether a spurious toggle preceded any of the 8 failures. To test: set that entry's
-  `history: true` (or add a debug log line in `pinHandler()`/`init_gpio()` for `gpioNum === 4`,
+  `history: true` (or add a debug log line in `pinHandler()`/`initGpio()` for `gpioNum === 4`,
   `src/lib/rpi-io.ts`) and check the next occurrence for a preceding INT toggle within the same
   second.

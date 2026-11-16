@@ -1,3 +1,7 @@
+// IoAdapter: base class with the state-object helpers (channel and state objects, history, timeouts).
+// This file is a deliberate own copy, kept per adapter since the iobroker-utils package was dropped. Siblings:
+// ioBroker.danfossicon/src/lib/io-adapter.ts and ioBroker.switchboard-io/src/lib/utils/io-adapter.ts.
+// Apply a fix to all copies.
 import type { AdapterOptions } from '@iobroker/adapter-core';
 import { Adapter } from '@iobroker/adapter-core';
 import { Mutex, withTimeout } from 'async-mutex';
@@ -223,12 +227,12 @@ export class IoAdapter extends Adapter {
 
 	/* Creates or overwrites a channel object at stateId. Resolves after the write completes. */
 	public async writeChannelObj(stateId: string, common: ioBroker.SettableChannelObject['common']): Promise<void> {
-		const obj: ioBroker.SettableChannelObject = {
+		const channelObj: ioBroker.SettableChannelObject = {
 			type: 'channel',
 			common: common,
 			native: {},
 		};
-		await this.setForeignObject(stateId, obj);
+		await this.setForeignObject(stateId, channelObj);
 	}
 
 	/*
@@ -382,23 +386,23 @@ export class IoAdapter extends Adapter {
 
 	/* Deletes the history instance's `custom` key of a state (an empty `custom` too), so the admin UI shows no history. */
 	private async removeHistoryCustom(stateId: string): Promise<void> {
-		const obj = await this.getForeignObjectAsync(stateId);
-		const custom = obj?.common.custom as Record<string, unknown> | undefined;
-		if (obj && custom && this.historyId && this.historyId in custom) {
+		const stateObj = await this.getForeignObjectAsync(stateId);
+		const custom = stateObj?.common.custom as Record<string, unknown> | undefined;
+		if (stateObj && custom && this.historyId && this.historyId in custom) {
 			const rest = Object.fromEntries(Object.entries(custom).filter(([id]) => id !== this.historyId));
 			if (Object.keys(rest).length > 0) {
-				obj.common.custom = rest as typeof obj.common.custom;
+				stateObj.common.custom = rest as typeof stateObj.common.custom;
 			} else {
-				delete obj.common.custom;
+				delete stateObj.common.custom;
 			}
-			await this.setForeignObject(stateId, obj);
+			await this.setForeignObject(stateId, stateObj);
 		}
 	}
 
 	/* Returns the ioBroker state object for stateId, or null if missing or not of type 'state'. */
 	public async readStateObject(stateId: string): Promise<ioBroker.StateObject | null> {
-		const obj = (await this.getForeignObjectAsync(stateId)) ?? null;
-		return obj?.type === 'state' ? obj : null;
+		const stateObj = (await this.getForeignObjectAsync(stateId)) ?? null;
+		return stateObj?.type === 'state' ? stateObj : null;
 	}
 
 	/* Writes a raw ioBroker state. Resolves after the write completes. */
