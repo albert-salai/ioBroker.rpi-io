@@ -109,15 +109,7 @@ export class MCP23017 {
 		this.addr = options.i2cAddr;
 	}
 
-	/**
-	 *
-	 * @param pin
-	 * @param dir
-	 * @param pol
-	 * @param level
-	 * @param cb
-	 * @param options
-	 */
+	/* Registers a pin: an input when onChange is given, else an output; initVal is its initial level. */
 	public registerPin(options: PinOptions): void {
 		//this.log.debug('%-15s %-15s %-10s %-40s %-10s %-7s %-3s', this.constructor.name, 'registerPin()', `MCP-${pinNum < 8 ? 'A' : 'B'}-${pinNum % 8}`, '', (pol === McpPol.ACTIVE_LOW ? 'inverted' : ''), (dir === McpDir.INPUT ? 'INPUT' : 'OUTPUT'), (level ? 'ON' : 'OFF'));
 		const isInput = !!options.onChange;
@@ -303,13 +295,7 @@ export class MCP23017 {
 		return pinChange;
 	}
 
-	/**
-	 *
-	 * @param pinNum
-	 * @param level
-	 * @param pinNum.pinName
-	 * @param pinNum.pinVal
-	 */
+	/* Sets the level of an output pin and writes the output latches of the chip. */
 	public async setOutput({ pinName, pinVal }: { pinName: PinName; pinVal: boolean }): Promise<void> {
 		const pinNum = PinNum[pinName];
 		const pinMask = 1 << pinNum;

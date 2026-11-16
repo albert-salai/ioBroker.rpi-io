@@ -86,8 +86,6 @@ export class RpiIo extends IoAdapter {
 
 	/**
 	 * Stops the adapter (REQ-STOP-EDGE): switches off the edge detection of all GPIO input pins.
-	 *
-	 * @param callback
 	 */
 	protected override async onUnload(): Promise<void> {
 		// switch off edge detection first (synchronous): rpio sets the pins' GPREN/GPFEN bits in hardware,
