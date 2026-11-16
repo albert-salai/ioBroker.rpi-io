@@ -245,11 +245,7 @@ export class RpiIo extends IoAdapter {
 	}
 
 	/**
-	 * Creates or updates the state object of an input.
-	 *
-	 * @param stateId the input state
-	 * @param input the input row
-	 * @param pin the pin for the description, e.g. 'GPIO 4'
+	 * Creates or updates the state object of an input row; the pin (e.g. 'GPIO 4') goes into the description.
 	 */
 	private async createInputState(stateId: string, input: PinRow, pin: string): Promise<void> {
 		await this.writeStateObj(stateId, {
@@ -268,8 +264,6 @@ export class RpiIo extends IoAdapter {
 	/**
 	 * Subscribes to the confirmed changes of states with an empty callback, so ioBroker still records and logs every
 	 * acked change although nothing needs to react to it here.
-	 *
-	 * @param stateIds the input states
 	 */
 	private async subscribeRecordOnly(stateIds: string[]): Promise<void> {
 		for (const stateId of stateIds) {
@@ -286,13 +280,9 @@ export class RpiIo extends IoAdapter {
 	/**
 	 * Creates or updates the state object of an output and restores its value. A not-yet-acked state means the last
 	 * commanded value was never confirmed applied (e.g. the instance crashed mid-command), so it falls back to
-	 * output.default instead of re-asserting an unconfirmed value.
-	 *
-	 * @param stateId the output state
-	 * @param output the output row
-	 * @param pin the pin for the description, e.g. 'GPIO 17'
-	 * @returns the value the pin starts with; the caller opens the pin with it, so the fallback corrects the ioBroker
-	 * state and the physical pin together
+	 * output.default instead of re-asserting an unconfirmed value. The pin (e.g. 'GPIO 17') goes into the description.
+	 * Returns the value the pin starts with; the caller opens the pin with it, so the fallback corrects the ioBroker
+	 * state and the physical pin together.
 	 */
 	private async initOutputState(stateId: string, output: OutputRow, pin: string): Promise<boolean> {
 		await this.writeStateObj(stateId, {
@@ -317,11 +307,8 @@ export class RpiIo extends IoAdapter {
 	/**
 	 * Applies a command (a not-yet-acked value written to the state from outside, e.g. the UI) to the physical pin,
 	 * then writes the state back with ack:true to confirm it happened. REQ-AUTO-OFF, REQ-OFF-CANCEL: a momentary
-	 * output (e.g. a garage-door trigger) also gets its auto-off timer.
-	 *
-	 * @param stateId the output state
-	 * @param output the output row
-	 * @param applyToPin sets the physical level (already inverted if the row is inverted)
+	 * output (e.g. a garage-door trigger) also gets its auto-off timer. applyToPin sets the physical level, already
+	 * inverted if the row is inverted.
 	 */
 	private async subscribeOutputCommands(
 		stateId: string,
@@ -343,10 +330,7 @@ export class RpiIo extends IoAdapter {
 	}
 
 	/**
-	 * Starts the auto-off timer of an output on each confirmed ON and on a confirmed ON restored at start.
-	 *
-	 * @param stateId the output state
-	 * @param autoOffSecs the auto-off time
+	 * Starts the auto-off timer (autoOffSecs) of an output on each confirmed ON and on a confirmed ON restored at start.
 	 */
 	private async subscribeAutoOff(stateId: string, autoOffSecs: number): Promise<void> {
 		const confirmed = autoOff<ioBroker.Timeout | undefined>(
